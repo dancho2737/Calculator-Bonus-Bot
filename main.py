@@ -1,6 +1,7 @@
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 import os
+import math
 
 user_choice_data = {}
 user_active_status = {}
@@ -67,10 +68,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         result = (
             f"Для выполнения условий отыгрыша с вашей суммой бонуса потребуется сделать следующие объёмы ставок в разных играх:\n\n"
-            f"🔹 Слоты (100%) — отыграть {slots:.2f} сомов\n"
-            f"🔹 Roulette (30%) — отыграть {roulette:.2f} сомов\n"
-            f"🔹 Blackjack (20%) — отыграть {blackjack:.2f} сомов\n"
-            f"🔹 Остальные настольные, crash игры и лайв-казино игры (10%) — отыграть {crash:.2f} сомов"
+            f"🔹 Слоты (100%) — отыграть {math.ceil(slots)} сомов\n"
+            f"🔹 Roulette (30%) — отыграть {math.ceil(roulette)} сомов\n"
+            f"🔹 Blackjack (20%) — отыграть {math.ceil(blackjack)} сомов\n"
+            f"🔹 Остальные настольные, crash игры и лайв-казино игры (10%) — отыграть {math.ceil(crash)} сомов"
         )
 
         await update.message.reply_text(result)
