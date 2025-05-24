@@ -1,42 +1,47 @@
-    from telegram import Update, ReplyKeyboardMarkup
+from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 import os
 
 user_choice_data = {}
-user_active_status = {}  # Статус активности каждого пользователя
+user_active_status = {}
 
 reply_keyboard = [['Крипто/Бай бонус 20'], ['Депозит бонус 10']]
 markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    user_active_status[user_id] = True  # Активируем пользователя
+    user_active_status[user_id] = True
     await update.message.reply_text(
         "Бот активирован. Выбери бонус для расчёта и введи сумму:",
         reply_markup=markup
     )
 
+async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    is_active = user_active_status.get(user_id, True)
+
+    if is_active:
+        await update.message.reply_text("Бот сейчас активен.")
+    else:
+        await update.message.reply_text("Бот сейчас остановлен. Напиши /start чтобы включить.")
+
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     text = update.message.text.strip().lower()
 
-    # Проверка на статус активности
     if not user_active_status.get(user_id, True):
         return
 
-    # Команда остановки
     if text == "stop":
         user_active_status[user_id] = False
         await update.message.reply_text("Бот остановлен. Чтобы запустить снова, напиши /start.")
         return
 
-    # Обработка выбора бонуса
     if text in ['крипто/бай бонус 20', 'депозит бонус 10']:
         user_choice_data[user_id] = text
         await update.message.reply_text(f"Выбран: {text}. Теперь введи сумму.")
         return
 
-    # Обработка суммы
     if user_id in user_choice_data:
         choice = user_choice_data[user_id]
         try:
@@ -76,6 +81,8 @@ if __name__ == '__main__':
     app = ApplicationBuilder().token(os.environ.get("BOT_TOKEN")).build()
 
     app.add_handler(CommandHandler('start', start))
+    app.add_handler(CommandHandler('status', status))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     app.run_polling()
+    
