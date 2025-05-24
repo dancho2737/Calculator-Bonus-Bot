@@ -40,10 +40,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("Ошибка выбора бонуса.")
             return
 
-        slots = sums3
-        roulette = sums3 * 3.33
-        blackjack = sums3 * 5
-        crash = sums3 * 10
+        slots = sums3 + sums
+        roulette = sums3 * 3.33 + sums
+        blackjack = sums3 * 5 + sums
+        crash = sums3 * 10 + sums
 
         result = (
             f"Для выполнения условий отыгрыша с вашей суммой бонуса потребуется сделать следующие объёмы ставок в разных играх:\n\n"
@@ -64,4 +64,4 @@ if __name__ == '__main__':
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     app.run_polling()
-        
+    
