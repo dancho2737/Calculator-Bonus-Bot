@@ -3,8 +3,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 import math
 import os
 
-TOKEN = 8104597347:AAGEkQ8ABc1XF57fC9ObKVPlqW7twI3Ddds
-
+TOKEN = os.environ.get("BOT_TOKEN")
 def safe_eval(expr):
     try:
         allowed_names = {k: v for k, v in math.__dict__.items() if not k.startswith("__")}
