@@ -2,9 +2,6 @@ from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 import os
 import math
-import locale
-
-locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
 user_choice_data = {}
 user_active_status = {}
@@ -13,6 +10,12 @@ user_count_calc = {}      # Счётчик подсчётов для каждо�
 
 reply_keyboard = [['Крипто/Бай бонус 20'], ['Депозит бонус 10']]
 markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
+
+def format_number(n):
+    # Округляем вверх и форматируем число с пробелами для тысяч
+    n_ceil = math.ceil(n)
+    s = f"{n_ceil:,}"
+    return s.replace(",", " ")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -79,10 +82,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         result = (
             f"Для выполнения условий отыгрыша с вашей суммой бонуса потребуется сделать следующие объёмы ставок в разных играх:\n\n"
-            f"🔹 Слоты (100%) — отыграть {locale.format_string('%d', math.ceil(slots), grouping=True).replace(',', ' ')} сомов\n"
-            f"🔹 Roulette (30%) — отыграть {locale.format_string('%d', math.ceil(roulette), grouping=True).replace(',', ' ')} сомов\n"
-            f"🔹 Blackjack (20%) — отыграть {locale.format_string('%d', math.ceil(blackjack), grouping=True).replace(',', ' ')} сомов\n"
-            f"🔹 Остальные настольные, crash игры и лайв-казино игры (10%) — отыграть {locale.format_string('%d', math.ceil(crash), grouping=True).replace(',', ' ')} сомов"
+            f"🔹 Слоты (100%) — отыграть {format_number(slots)} сомов\n"
+            f"🔹 Roulette (30%) — отыграть {format_number(roulette)} сомов\n"
+            f"🔹 Blackjack (20%) — отыграть {format_number(blackjack)} сомов\n"
+            f"🔹 Остальные настольные, crash игры и лайв-казино игры (10%) — отыграть {format_number(crash)} сомов"
         )
 
         await update.message.reply_text(result)
@@ -115,4 +118,4 @@ if __name__ == '__main__':
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     app.run_polling()
-        
+    
