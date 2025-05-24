@@ -2,9 +2,14 @@ from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 import os
 import math
+import locale
+
+locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
 user_choice_data = {}
 user_active_status = {}
+user_spam_status = {}     # True — показывать полное предупреждение, False — выключил (только короткое каждые 10 подсчётов)
+user_count_calc = {}      # Счётчик подсчётов для каждого пользователя
 
 reply_keyboard = [['Крипто/Бай бонус 20'], ['Депозит бонус 10']]
 markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
@@ -12,6 +17,8 @@ markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_active_status[user_id] = True
+    user_spam_status[user_id] = True
+    user_count_calc[user_id] = 0
     await update.message.reply_text(
         "Бот активирован. Выбери бонус для расчёта и введи сумму:",
         reply_markup=markup
@@ -20,7 +27,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     is_active = user_active_status.get(user_id, True)
-
     if is_active:
         await update.message.reply_text("Бот сейчас активен.")
     else:
@@ -36,6 +42,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if text == "stop":
         user_active_status[user_id] = False
         await update.message.reply_text("Бот остановлен. Чтобы запустить снова, напиши /start.")
+        return
+
+    if text == "stopspam":
+        user_spam_status[user_id] = False
+        await update.message.reply_text("Предупреждения больше показываться не будут, кроме каждых 10 подсчётов.")
         return
 
     if text in ['крипто/бай бонус 20', 'депозит бонус 10']:
@@ -68,13 +79,31 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         result = (
             f"Для выполнения условий отыгрыша с вашей суммой бонуса потребуется сделать следующие объёмы ставок в разных играх:\n\n"
-            f"🔹 Слоты (100%) — отыграть {math.ceil(slots)} сомов\n"
-            f"🔹 Roulette (30%) — отыграть {math.ceil(roulette)} сомов\n"
-            f"🔹 Blackjack (20%) — отыграть {math.ceil(blackjack)} сомов\n"
-            f"🔹 Остальные настольные, crash игры и лайв-казино игры (10%) — отыграть {math.ceil(crash)} сомов"
+            f"🔹 Слоты (100%) — отыграть {locale.format_string('%d', math.ceil(slots), grouping=True).replace(',', ' ')} сомов\n"
+            f"🔹 Roulette (30%) — отыграть {locale.format_string('%d', math.ceil(roulette), grouping=True).replace(',', ' ')} сомов\n"
+            f"🔹 Blackjack (20%) — отыграть {locale.format_string('%d', math.ceil(blackjack), grouping=True).replace(',', ' ')} сомов\n"
+            f"🔹 Остальные настольные, crash игры и лайв-казино игры (10%) — отыграть {locale.format_string('%d', math.ceil(crash), grouping=True).replace(',', ' ')} сомов"
         )
 
         await update.message.reply_text(result)
+
+        # Увеличиваем счётчик подсчётов
+        user_count_calc[user_id] = user_count_calc.get(user_id, 0) + 1
+        count = user_count_calc[user_id]
+
+        if user_spam_status.get(user_id, True):
+            # Спам включён — показываем полное предупреждение всегда
+            await update.message.reply_text(
+                "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки. "
+                "Если же хотите чтобы это сообщение больше не появлялось, то напишите stopspam"
+            )
+        else:
+            # Спам выключен — показываем короткое предупреждение только при каждом 10-м подсчёте
+            if count % 10 == 0:
+                await update.message.reply_text(
+                    "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки."
+                )
+
     else:
         await update.message.reply_text("Сначала выбери бонус кнопкой ниже.", reply_markup=markup)
 
@@ -86,4 +115,4 @@ if __name__ == '__main__':
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     app.run_polling()
-    
+        
