@@ -1,27 +1,42 @@
-from telegram import Update, ReplyKeyboardMarkup
+    from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 import os
 
 user_choice_data = {}
+user_active_status = {}  # Статус активности каждого пользователя
 
 reply_keyboard = [['Крипто/Бай бонус 20'], ['Депозит бонус 10']]
 markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    user_active_status[user_id] = True  # Активируем пользователя
     await update.message.reply_text(
-        "Выбери бонус для расчёта и введи сумму:",
+        "Бот активирован. Выбери бонус для расчёта и введи сумму:",
         reply_markup=markup
     )
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    text = update.message.text
+    text = update.message.text.strip().lower()
 
-    if text in ['Крипто/Бай бонус 20', 'Депозит бонус 10']:
+    # Проверка на статус активности
+    if not user_active_status.get(user_id, True):
+        return
+
+    # Команда остановки
+    if text == "stop":
+        user_active_status[user_id] = False
+        await update.message.reply_text("Бот остановлен. Чтобы запустить снова, напиши /start.")
+        return
+
+    # Обработка выбора бонуса
+    if text in ['крипто/бай бонус 20', 'депозит бонус 10']:
         user_choice_data[user_id] = text
         await update.message.reply_text(f"Выбран: {text}. Теперь введи сумму.")
         return
 
+    # Обработка суммы
     if user_id in user_choice_data:
         choice = user_choice_data[user_id]
         try:
@@ -30,10 +45,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("Пожалуйста, введи корректное число.")
             return
 
-        if choice == 'Депозит бонус 10':
+        if choice == 'депозит бонус 10':
             sums2 = sums * 0.10
             sums3 = sums2 * 15
-        elif choice == 'Крипто/Бай бонус 20':
+        elif choice == 'крипто/бай бонус 20':
             sums2 = sums * 0.20
             sums3 = sums2 * 20
         else:
@@ -64,4 +79,3 @@ if __name__ == '__main__':
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     app.run_polling()
-    
