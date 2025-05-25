@@ -1,13 +1,13 @@
 import os
 import math
-import asyncio
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
     MessageHandler,
     filters,
-    ContextTypes
+    ContextTypes,
+    Dispatcher,
 )
 from aiohttp import web
 
@@ -86,40 +86,49 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("Сначала выбери бонус кнопкой ниже.", reply_markup=markup)
 
-# aiohttp веб-сервер для Render
-async def handle(request):
-    return web.Response(text="Bot is running")
 
-async def run_bot():
-    app = ApplicationBuilder().token(os.environ.get("BOT_TOKEN")).build()
+async def telegram_webhook(request):
+    app = request.app['bot_app']
+    dispatcher = app.dispatcher
 
-    app.add_handler(CommandHandler('start', start))
-    app.add_handler(CommandHandler('status', status))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    data = await request.json()
+    update = Update.de_json(data, app.bot)
+    await dispatcher.process_update(update)
 
-    await app.initialize()
-    await app.start()
-    print("Бот запущен")
+    return web.Response(text="ok")
 
-    await app.updater.start_polling()
-    await app.updater.idle()
+async def on_startup(app):
+    token = os.environ.get('BOT_TOKEN')
+    app['bot_app'] = ApplicationBuilder().token(token).build()
 
-async def main():
-    bot_task = asyncio.create_task(run_bot())
+    bot_app = app['bot_app']
+    bot_app.add_handler(CommandHandler('start', start))
+    bot_app.add_handler(CommandHandler('status', status))
+    bot_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    web_app = web.Application()
-    web_app.add_routes([web.get('/', handle)])
+    await bot_app.initialize()
+    await bot_app.start()
 
-    runner = web.AppRunner(web_app)
-    await runner.setup()
+    # Установка webhook
+    url = os.environ.get('WEBHOOK_URL')  # Например: https://yourdomain.com/telegram
+    if url is None:
+        print("WEBHOOK_URL не задан!")
+        return
 
-    port = int(os.environ.get('PORT', 8080))
-    site = web.TCPSite(runner, '0.0.0.0', port)
-    await site.start()
+    await bot_app.bot.set_webhook(url)
+    print(f"Webhook установлен на {url}")
 
-    print(f"Web server запущен на порту {port}")
+async def on_cleanup(app):
+    bot_app = app['bot_app']
+    await bot_app.stop()
+    await bot_app.shutdown()
 
-    await bot_task
+app = web.Application()
+app.router.add_post('/telegram', telegram_webhook)
+
+app.on_startup.append(on_startup)
+app.on_cleanup.append(on_cleanup)
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    port = int(os.environ.get('PORT', 8080))
+    web.run_app(app, host='0.0.0.0', port=port)
