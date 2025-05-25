@@ -1,5 +1,6 @@
 import os
 import math
+import asyncio
 from flask import Flask, request, abort
 from telegram import Update, Bot, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
@@ -182,13 +183,13 @@ def webhook():
 def index():
     return "Bot is running"
 
-def set_webhook():
+async def set_webhook():
     url = os.environ.get("WEBHOOK_URL")
     if not url:
         print("WEBHOOK_URL is not set. Please set it to your deployed URL + /webhook/<TOKEN>")
         return False
     full_url = f"{url}/webhook/{BOT_TOKEN}"
-    success = bot.set_webhook(full_url)
+    success = await bot.set_webhook(full_url)
     if success:
         print(f"Webhook was set to {full_url}")
     else:
@@ -197,7 +198,7 @@ def set_webhook():
 
 
 if __name__ == '__main__':
-    # При запуске ставим webhook
-    set_webhook()
-    # Запускаем Flask
+    # Асинхронно ставим webhook
+    asyncio.run(set_webhook())
+    # Запускаем Flask сервер
     app.run(host='0.0.0.0', port=PORT)
