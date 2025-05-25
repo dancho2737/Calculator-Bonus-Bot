@@ -12,7 +12,6 @@ reply_keyboard = [['Крипто/Бай бонус 20'], ['Депозит бон
 markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
 
 def format_number(n):
-    # Округляем вверх и форматируем число с пробелами для тысяч
     n_ceil = math.ceil(n)
     s = f"{n_ceil:,}"
     return s.replace(",", " ")
@@ -30,10 +29,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     is_active = user_active_status.get(user_id, True)
-    if is_active:
-        await update.message.reply_text("Бот сейчас активен.")
-    else:
-        await update.message.reply_text("Бот сейчас остановлен. Напиши /start чтобы включить.")
+    msg = "Бот сейчас активен." if is_active else "Бот сейчас остановлен. Напиши /start чтобы включить."
+    await update.message.reply_text(msg)
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -90,27 +87,23 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await update.message.reply_text(result)
 
-        # Увеличиваем счётчик подсчётов
         user_count_calc[user_id] = user_count_calc.get(user_id, 0) + 1
         count = user_count_calc[user_id]
 
         if user_spam_status.get(user_id, True):
-            # Спам включён — показываем полное предупреждение всегда
             await update.message.reply_text(
-"Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки. "
+                "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки. "
                 "Если же хотите чтобы это сообщение больше не появлялось, то напишите stopspam"
             )
         else:
-            # Спам выключен — показываем короткое предупреждение только при каждом 10-м подсчёте
             if count % 10 == 0:
                 await update.message.reply_text(
                     "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки."
                 )
-
     else:
         await update.message.reply_text("Сначала выбери бонус кнопкой ниже.", reply_markup=markup)
 
-if name == 'main':
+if __name__ == '__main__':
     app = ApplicationBuilder().token(os.environ.get("BOT_TOKEN")).build()
 
     app.add_handler(CommandHandler('start', start))
