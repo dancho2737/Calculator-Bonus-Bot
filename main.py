@@ -7,15 +7,22 @@ from telegram.ext import (
     ContextTypes,
     filters,
 )
-
 import os
 import math
-import asyncio
+import threading
 
+# ==== Config ====
 TOKEN = os.environ.get("BOT_TOKEN")
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 
-# Словари для состояния
+# ==== Flask ====
+flask_app = Flask(__name__)
+
+# ==== Telegram Application ====
+application = Application.builder().token(TOKEN).build()
+
+# ==== Бизнес-логика ====
+
 user_choice_data = {}
 user_active_status = {}
 user_spam_status = {}
@@ -25,11 +32,8 @@ reply_keyboard = [['Крипто/Бай бонус 20'], ['Депозит бон
 markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
 
 def format_number(n):
-    n_ceil = math.ceil(n)
-    s = f"{n_ceil:,}"
-    return s.replace(",", " ")
+    return f"{math.ceil(n):,}".replace(",", " ")
 
-# Команда /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_active_status[user_id] = True
@@ -40,14 +44,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=markup
     )
 
-# Команда /status
 async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    is_active = user_active_status.get(user_id, True)
-    msg = "Бот сейчас активен." if is_active else "Бот сейчас остановлен. Напиши /start чтобы включить."
+    active = user_active_status.get(user_id, True)
+    msg = "Бот сейчас активен." if active else "Бот остановлен. Напиши /start чтобы включить."
     await update.message.reply_text(msg)
 
-# Обработка обычных сообщений
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     text = update.message.text.strip().lower()
@@ -70,82 +72,76 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Выбран: {text}. Теперь введи сумму.")
         return
 
-    if user_id in user_choice_data:
-        choice = user_choice_data[user_id]
-        try:
-            sums = float(text.replace(',', '.'))
-        except ValueError:
-            await update.message.reply_text("Пожалуйста, введи корректное число.")
-            return
+    if user_id not in user_choice_data:
+        await update.message.reply_text("Сначала выбери бонус кнопкой ниже.", reply_markup=markup)
+        return
 
-        if choice == 'депозит бонус 10':
-            sums2 = sums * 0.10
-            sums3 = sums2 * 15
-        elif choice == 'крипто/бай бонус 20':
-            sums2 = sums * 0.20
-            sums3 = sums2 * 20
-        else:
-            await update.message.reply_text("Ошибка выбора бонуса.")
-            return
+    try:
+        sums = float(text.replace(',', '.'))
+    except ValueError:
+        await update.message.reply_text("Пожалуйста, введи корректное число.")
+        return
 
-        slots = sums3 + sums
-        roulette = sums3 * 3.33 + sums
-        blackjack = sums3 * 5 + sums
-        crash = sums3 * 10 + sums
+    choice = user_choice_data[user_id]
+    if choice == 'депозит бонус 10':
+        sums2 = sums * 0.10
+        sums3 = sums2 * 15
+    elif choice == 'крипто/бай бонус 20':
+        sums2 = sums * 0.20
+        sums3 = sums2 * 20
+    else:
+        await update.message.reply_text("Ошибка выбора бонуса.")
+        return
 
-        result = (
-            f"Для выполнения условий отыгрыша с вашей суммой бонуса потребуется сделать следующие объёмы ставок:\n\n"
-            f"🔹 Слоты (100%) — отыграть {format_number(slots)} сомов\n"
-            f"🔹 Roulette (30%) — отыграть {format_number(roulette)} сомов\n"
-            f"🔹 Blackjack (20%) — отыграть {format_number(blackjack)} сомов\n"
-            f"🔹 Остальные настольные, crash и лайв-казино (10%) — отыграть {format_number(crash)} сомов"
+    slots = sums3 + sums
+    roulette = sums3 * 3.33 + sums
+    blackjack = sums3 * 5 + sums
+    crash = sums3 * 10 + sums
+
+    result = (
+        f"Для выполнения условий отыгрыша с вашей суммой бонуса потребуется сделать:\n\n"
+        f"🔹 Слоты (100%) — {format_number(slots)} сомов\n"
+        f"🔹 Roulette (30%) — {format_number(roulette)} сомов\n"
+        f"🔹 Blackjack (20%) — {format_number(blackjack)} сомов\n"
+        f"🔹 Crash / лайв / настольные (10%) — {format_number(crash)} сомов"
+    )
+
+    await update.message.reply_text(result)
+
+    user_count_calc[user_id] = user_count_calc.get(user_id, 0) + 1
+    count = user_count_calc[user_id]
+
+    if user_spam_status.get(user_id, True):
+        await update.message.reply_text(
+            "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки. "
+            "Если хотите отключить эти сообщения — напишите stopspam"
+        )
+    elif count % 10 == 0:
+        await update.message.reply_text(
+            "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки."
         )
 
-        await update.message.reply_text(result)
-
-        user_count_calc[user_id] = user_count_calc.get(user_id, 0) + 1
-        count = user_count_calc[user_id]
-
-        if user_spam_status.get(user_id, True):
-            await update.message.reply_text(
-                "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки. "
-                "Если хотите отключить эти сообщения — напишите stopspam"
-            )
-        elif count % 10 == 0:
-            await update.message.reply_text(
-                "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки."
-            )
-    else:
-        await update.message.reply_text("Сначала выбери бонус кнопкой ниже.", reply_markup=markup)
-
-
-# Flask-приложение
-flask_app = Flask(__name__)
-
-# Telegram Application
-application = Application.builder().token(TOKEN).build()
-
+# ==== Обработчики ====
 application.add_handler(CommandHandler("start", start))
 application.add_handler(CommandHandler("status", status))
 application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-# Точка входа Telegram Webhook
-@flask_app.post("/")
-async def webhook() -> str:
-    update = Update.de_json(await request.get_json(force=True), application.bot)
-    await application.update_queue.put(update)
-    return "ok"
+# ==== Webhook ====
+@flask_app.route(f"/{TOKEN}", methods=["POST"])
+def webhook():
+    update = Update.de_json(request.get_json(force=True), application.bot)
+    application.create_task(application.update_queue.put(update))
+    return "ok", 200
 
-# Установка Webhook при запуске
-async def main():
-    await application.bot.set_webhook(WEBHOOK_URL)
-    await application.initialize()
-    await application.start()
-    print("Бот запущен (WebHook)")
-    
-    # Flask run
+def run_flask():
     flask_app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
 
-# Запуск
-if __name__ == '__main__':
-    asyncio.run(main())
+async def run_bot():
+    await application.initialize()
+    await application.bot.set_webhook(f"{WEBHOOK_URL}/{TOKEN}")
+    await application.start()
+    print("✅ Бот запущен (Webhook)")
+
+if __name__ == "__main__":
+    threading.Thread(target=run_flask).start()
+    asyncio.run(run_bot())
