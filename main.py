@@ -8,11 +8,10 @@ user_active_status = {}
 user_spam_status = {}     # True — показывать полное предупреждение, False — выключил (только короткое каждые 10 подсчётов)
 user_count_calc = {}      # Счётчик подсчётов для каждого пользователя
 
-reply_keyboard = [['Крипто/Бай бонус 20'], ['Депозит бонус 10']]
+reply_keyboard = [['Крипто/Бай бонус 20'], ['Депозит бонус 10'], ['Кэшбэк']]
 markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
 
 def format_number(n):
-    # Округляем вверх и форматируем число с пробелами для тысяч
     n_ceil = math.ceil(n)
     s = f"{n_ceil:,}"
     return s.replace(",", " ")
@@ -23,7 +22,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_spam_status[user_id] = True
     user_count_calc[user_id] = 0
     await update.message.reply_text(
-        "Бот активирован. Выбери бонус для расчёта и введи сумму:",
+        "Бот активирован. Выбери бонус или расчёт кэшбэка, затем введи сумму:",
         reply_markup=markup
     )
 
@@ -52,7 +51,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Предупреждения больше показываться не будут, кроме каждых 10 подсчётов.")
         return
 
-    if text in ['крипто/бай бонус 20', 'депозит бонус 10']:
+    if text in ['крипто/бай бонус 20', 'депозит бонус 10', 'кэшбэк']:
         user_choice_data[user_id] = text
         await update.message.reply_text(f"Выбран: {text}. Теперь введи сумму.")
         return
@@ -68,54 +67,35 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if choice == 'депозит бонус 10':
             sums2 = sums * 0.10
             sums3 = sums2 * 15
+            slots = sums3 + sums
+            roulette = sums3 * 3.33 + sums
+            blackjack = sums3 * 5 + sums
+            crash = sums3 * 10 + sums
+
+            result = (
+                f"Для выполнения условий отыгрыша с вашей суммой бонуса потребуется сделать следующие объёмы ставок в разных играх:\n\n"
+                f"🔹 Слоты (100%) — отыграть {format_number(slots)} сомов\n"
+                f"🔹 Roulette (30%) — отыграть {format_number(roulette)} сомов\n"
+                f"🔹 Blackjack (20%) — отыграть {format_number(blackjack)} сомов\n"
+                f"🔹 Остальные настольные, crash игры и лайв-казино игры (10%) — отыграть {format_number(crash)} сомов"
+            )
+            await update.message.reply_text(result)
+
         elif choice == 'крипто/бай бонус 20':
             sums2 = sums * 0.20
             sums3 = sums2 * 20
-        else:
-            await update.message.reply_text("Ошибка выбора бонуса.")
-            return
+            slots = sums3 + sums
+            roulette = sums3 * 3.33 + sums
+            blackjack = sums3 * 5 + sums
+            crash = sums3 * 10 + sums
 
-        slots = sums3 + sums
-        roulette = sums3 * 3.33 + sums
-        blackjack = sums3 * 5 + sums
-        crash = sums3 * 10 + sums
-
-        result = (
-            f"Для выполнения условий отыгрыша с вашей суммой бонуса потребуется сделать следующие объёмы ставок в разных играх:\n\n"
-            f"🔹 Слоты (100%) — отыграть {format_number(slots)} сомов\n"
-            f"🔹 Roulette (30%) — отыграть {format_number(roulette)} сомов\n"
-            f"🔹 Blackjack (20%) — отыграть {format_number(blackjack)} сомов\n"
-            f"🔹 Остальные настольные, crash игры и лайв-казино игры (10%) — отыграть {format_number(crash)} сомов"
-        )
-
-        await update.message.reply_text(result)
-
-        # Увеличиваем счётчик подсчётов
-        user_count_calc[user_id] = user_count_calc.get(user_id, 0) + 1
-        count = user_count_calc[user_id]
-
-        if user_spam_status.get(user_id, True):
-            # Спам включён — показываем полное предупреждение всегда
-            await update.message.reply_text(
-                "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки. "
-                "Если же хотите чтобы это сообщение больше не появлялось, то напишите stopspam"
+            result = (
+                f"Для выполнения условий отыгрыша с вашей суммой бонуса потребуется сделать следующие объёмы ставок в разных играх:\n\n"
+                f"🔹 Слоты (100%) — отыграть {format_number(slots)} сомов\n"
+                f"🔹 Roulette (30%) — отыграть {format_number(roulette)} сомов\n"
+                f"🔹 Blackjack (20%) — отыграть {format_number(blackjack)} сомов\n"
+                f"🔹 Остальные настольные, crash игры и лайв-казино игры (10%) — отыграть {format_number(crash)} сомов"
             )
-        else:
-            # Спам выключен — показываем короткое предупреждение только при каждом 10-м подсчёте
-            if count % 10 == 0:
-                await update.message.reply_text(
-                    "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки."
-                )
+            await update.message.reply_text(result)
 
-    else:
-        await update.message.reply_text("Сначала выбери бонус кнопкой ниже.", reply_markup=markup)
-
-if __name__ == '__main__':
-    app = ApplicationBuilder().token(os.environ.get("BOT_TOKEN")).build()
-
-    app.add_handler(CommandHandler('start', start))
-    app.add_handler(CommandHandler('status', status))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
-    app.run_polling()
-    
+        elif choice == 'кэшбэк':
