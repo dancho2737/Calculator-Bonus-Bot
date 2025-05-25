@@ -1,19 +1,17 @@
 from flask import Flask, request
 from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    MessageHandler,
-    ContextTypes,
-    filters,
-)
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 import os
 import math
 import asyncio
 
 TOKEN = os.environ.get("BOT_TOKEN")
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
+PORT = int(os.environ.get("PORT", 5000))
 
+app = Flask(__name__)
+
+# Ваши словари и функции тут (пример, можно импортировать из другого файла)
 user_choice_data = {}
 user_active_status = {}
 user_spam_status = {}
@@ -113,31 +111,38 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("Сначала выбери бонус кнопкой ниже.", reply_markup=markup)
 
-flask_app = Flask(__name__)
-
 application = Application.builder().token(TOKEN).build()
 
 application.add_handler(CommandHandler("start", start))
 application.add_handler(CommandHandler("status", status))
 application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-@flask_app.post("/")
-async def webhook() -> str:
-    update = Update.de_json(await request.get_json(force=True), application.bot)
-    await application.update_queue.put(update)
+# Синхронный Flask-обработчик для Telegram webhook
+@app.route('/', methods=['POST'])
+def webhook():
+    # Получаем update из JSON
+    update = Update.de_json(request.get_json(force=True), application.bot)
+
+    # Запускаем асинхронную обработку в event loop
+    asyncio.run(application.update_queue.put(update))
     return "ok"
 
-@flask_app.get("/")
+# Обработчик для GET запроса (чтобы не было 405)
+@app.route('/', methods=['GET'])
 def index():
     return "Бот запущен и работает"
 
-async def main():
+# Функция для установки webhook и запуска приложения
+async def start_bot():
     await application.bot.set_webhook(WEBHOOK_URL)
+    print("Webhook установлен")
     await application.initialize()
     await application.start()
-    print("Бот запущен (WebHook)")
-    flask_app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    print("Бот запущен")
 
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+if __name__ == '__main__':
+    # Запускаем бота в отдельном event loop
+    loop = asyncio.get_event_loop()
+    loop.create_task(start_bot())
+    # Запускаем Flask (синхронный)
+    app.run(host="0.0.0.0", port=PORT)
