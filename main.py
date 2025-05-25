@@ -2,7 +2,13 @@ import os
 import math
 import asyncio
 from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    MessageHandler,
+    filters,
+    ContextTypes
+)
 from aiohttp import web
 
 user_choice_data = {}
@@ -80,7 +86,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("Сначала выбери бонус кнопкой ниже.", reply_markup=markup)
 
-# Запуск Telegram-бота в фоне
+# aiohttp веб-сервер для Render
+async def handle(request):
+    return web.Response(text="Bot is running")
+
 async def run_bot():
     app = ApplicationBuilder().token(os.environ.get("BOT_TOKEN")).build()
 
@@ -91,33 +100,25 @@ async def run_bot():
     await app.initialize()
     await app.start()
     print("Бот запущен")
-    # Запуск polling (бесконечный цикл)
+
     await app.updater.start_polling()
-    # Ожидаем завершения работы бота (практически не наступит)
     await app.updater.idle()
 
-# Простой веб-сервер для Render
-async def handle(request):
-    return web.Response(text="Bot is running")
-
 async def main():
-    # Запускаем Telegram-бота как задачу в фоне
     bot_task = asyncio.create_task(run_bot())
 
-    # Запускаем веб-сервер aiohttp
-    app = web.Application()
-    app.add_routes([web.get('/', handle)])
+    web_app = web.Application()
+    web_app.add_routes([web.get('/', handle)])
 
-    runner = web.AppRunner(app)
+    runner = web.AppRunner(web_app)
     await runner.setup()
 
     port = int(os.environ.get('PORT', 8080))
     site = web.TCPSite(runner, '0.0.0.0', port)
     await site.start()
 
-    print(f"Web server running on port {port}")
+    print(f"Web server запущен на порту {port}")
 
-    # Ожидаем, пока бот и веб-сервер работают
     await bot_task
 
 if __name__ == '__main__':
