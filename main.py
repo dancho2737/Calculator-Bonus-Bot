@@ -166,15 +166,15 @@ application.add_handler(CommandHandler('start', start))
 application.add_handler(CommandHandler('status', status))
 application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
 
-# Порт для Render
 PORT = int(os.environ.get('PORT', '5000'))
 
 @app.route('/webhook/' + BOT_TOKEN, methods=['POST'])
 def webhook():
     if request.method == "POST":
         update = Update.de_json(request.get_json(force=True), bot)
-        # Обработка обновления через Application
-        application.update_queue.put(update)
+        loop = asyncio.get_event_loop()
+        # Корректно ставим обновление в очередь
+        asyncio.run_coroutine_threadsafe(application.update_queue.put(update), loop)
         return "OK"
     else:
         abort(405)
@@ -196,9 +196,7 @@ async def set_webhook():
         print("Failed to set webhook")
     return success
 
-
 if __name__ == '__main__':
-    # Асинхронно ставим webhook
+    # Ставим webhook и запускаем Flask сервер
     asyncio.run(set_webhook())
-    # Запускаем Flask сервер
     app.run(host='0.0.0.0', port=PORT)
