@@ -1,16 +1,23 @@
-from flask import Flask, request, abort
+from flask import Flask, request
 from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    MessageHandler,
+    ContextTypes,
+    filters,
+)
 import os
 import math
 import asyncio
 
 TOKEN = os.environ.get("BOT_TOKEN")
-WEBHOOK_URL = os.environ.get("WEBHOOK_URL")  # Например https://yourapp.onrender.com
+WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 
-# Состояния пользователей
 user_choice_data = {}
 user_active_status = {}
+user_spam_status = {}
+user_count_calc = {}
 
 reply_keyboard = [['Крипто/Бай бонус 20'], ['Депозит бонус 10']]
 markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
@@ -23,6 +30,8 @@ def format_number(n):
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_active_status[user_id] = True
+    user_spam_status[user_id] = True
+    user_count_calc[user_id] = 0
     await update.message.reply_text(
         "Бот активирован. Выбери бонус для расчёта и введи сумму:",
         reply_markup=markup
@@ -31,10 +40,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     is_active = user_active_status.get(user_id, True)
-    if is_active:
-        await update.message.reply_text("Бот сейчас активен.")
-    else:
-        await update.message.reply_text("Бот сейчас остановлен. Напиши /start чтобы включить.")
+    msg = "Бот сейчас активен." if is_active else "Бот сейчас остановлен. Напиши /start чтобы включить."
+    await update.message.reply_text(msg)
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -46,6 +53,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if text == "stop":
         user_active_status[user_id] = False
         await update.message.reply_text("Бот остановлен. Чтобы запустить снова, напиши /start.")
+        return
+
+    if text == "stopspam":
+        user_spam_status[user_id] = False
+        await update.message.reply_text("Предупреждения больше показываться не будут, кроме каждых 10 подсчётов.")
         return
 
     if text in ['крипто/бай бонус 20', 'депозит бонус 10']:
@@ -85,41 +97,47 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         await update.message.reply_text(result)
+
+        user_count_calc[user_id] = user_count_calc.get(user_id, 0) + 1
+        count = user_count_calc[user_id]
+
+        if user_spam_status.get(user_id, True):
+            await update.message.reply_text(
+                "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки. "
+                "Если хотите отключить эти сообщения — напишите stopspam"
+            )
+        elif count % 10 == 0:
+            await update.message.reply_text(
+                "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки."
+            )
     else:
         await update.message.reply_text("Сначала выбери бонус кнопкой ниже.", reply_markup=markup)
 
-
-# Flask-приложение
 flask_app = Flask(__name__)
 
-# Создаём telegram application
 application = Application.builder().token(TOKEN).build()
+
 application.add_handler(CommandHandler("start", start))
 application.add_handler(CommandHandler("status", status))
 application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
+@flask_app.post("/")
+async def webhook() -> str:
+    update = Update.de_json(await request.get_json(force=True), application.bot)
+    await application.update_queue.put(update)
+    return "ok"
 
-@flask_app.route('/', methods=["POST"])
-def webhook():
-    # Принимаем update от Telegram
-    if request.method == "POST":
-        update = Update.de_json(request.get_json(force=True), application.bot)
-        # Обрабатываем update в отдельной таске asyncio
-        asyncio.create_task(application.update_queue.put(update))
-        return "ok"
-    else:
-        abort(405)
-
+@flask_app.get("/")
+def index():
+    return "Бот запущен и работает"
 
 async def main():
-    # Устанавливаем webhook
     await application.bot.set_webhook(WEBHOOK_URL)
     await application.initialize()
     await application.start()
     print("Бот запущен (WebHook)")
-    # Запускаем Flask сервер на 0.0.0.0:PORT
     flask_app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
+    import asyncio
     asyncio.run(main())
