@@ -78,7 +78,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("Сначала выбери бонус кнопкой ниже.", reply_markup=markup)
 
-if name == 'main':
+
+if __name__ == '__main__':
     app = ApplicationBuilder().token(os.environ.get("BOT_TOKEN")).build()
 
     app.add_handler(CommandHandler('start', start))
