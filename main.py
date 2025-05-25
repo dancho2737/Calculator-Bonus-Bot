@@ -5,19 +5,20 @@ import os
 import math
 import threading
 
-# Переменные
+# Получаем токен и порт из переменных окружения
 TOKEN = os.environ.get("BOT_TOKEN")
 PORT = int(os.environ.get("PORT", 5000))
 
+# Данные по пользователям
 user_choice_data = {}
 user_active_status = {}
 user_spam_status = {}
 user_count_calc = {}
 
+# Клавиатура
 reply_keyboard = [['Крипто/Бай бонус 20'], ['Депозит бонус 10']]
 markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
 
-# Функции
 def format_number(n):
     n_ceil = math.ceil(n)
     s = f"{n_ceil:,}"
@@ -104,7 +105,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("Сначала выбери бонус кнопкой ниже.", reply_markup=markup)
 
-# Telegram bot запускается в отдельном потоке
 def run_bot():
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
@@ -112,7 +112,6 @@ def run_bot():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.run_polling()
 
-# Flask только чтобы Render "видел" порт
 flask_app = Flask(__name__)
 
 @flask_app.route('/')
@@ -120,5 +119,6 @@ def index():
     return "Бот работает! 🎉"
 
 if __name__ == '__main__':
+    # Запускаем бота в отдельном потоке, Flask — в главном
     threading.Thread(target=run_bot).start()
     flask_app.run(host="0.0.0.0", port=PORT)
