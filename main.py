@@ -3,7 +3,13 @@ import math
 import asyncio
 from flask import Flask, request, abort
 from telegram import Update, Bot, ReplyKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    MessageHandler,
+    ContextTypes,
+    filters,
+)
 
 # --- Хранилища данных пользователей ---
 user_choice_data = {}
@@ -78,11 +84,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             crash = sums3 * 10 + sums
 
             result = (
-                f"Для выполнения условий отыгрыша с вашей суммой бонуса потребуется сделать следующие объёмы ставок в разных играх:\n\n"
+                f"Для выполнения условий отыгрыша с вашей суммой бонуса потребуется сделать следующие объёмы ставок:\n\n"
                 f"🔹 Слоты (100%) — отыграть {format_number(slots)} сомов\n"
                 f"🔹 Roulette (30%) — отыграть {format_number(roulette)} сомов\n"
                 f"🔹 Blackjack (20%) — отыграть {format_number(blackjack)} сомов\n"
-                f"🔹 Остальные настольные, crash игры и лайв-казино игры (10%) — отыграть {format_number(crash)} сомов"
+                f"🔹 Остальные игры (10%) — отыграть {format_number(crash)} сомов"
             )
             await update.message.reply_text(result)
 
@@ -95,11 +101,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             crash = sums3 * 10 + sums
 
             result = (
-                f"Для выполнения условий отыгрыша с вашей суммой бонуса потребуется сделать следующие объёмы ставок в разных играх:\n\n"
+                f"Для выполнения условий отыгрыша с вашей суммой бонуса потребуется сделать следующие объёмы ставок:\n\n"
                 f"🔹 Слоты (100%) — отыграть {format_number(slots)} сомов\n"
                 f"🔹 Roulette (30%) — отыграть {format_number(roulette)} сомов\n"
                 f"🔹 Blackjack (20%) — отыграть {format_number(blackjack)} сомов\n"
-                f"🔹 Остальные настольные, crash игры и лайв-казино игры (10%) — отыграть {format_number(crash)} сомов"
+                f"🔹 Остальные игры (10%) — отыграть {format_number(crash)} сомов"
             )
             await update.message.reply_text(result)
 
@@ -117,18 +123,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             cashback = sums * percent / 100
             await update.message.reply_text(
-                f"Для кэшбэка нужно минимум 500 сом чистых потерь за 24 часа. "
-                f"Чистые потери считаются так:\n"
-                f"депозиты без бонусов − выводы = чистые потери.\n\n"
-                f"Например, вы внесли и проиграли {format_number(sums)} сом, но до этого вывели 1 000 сом. "
-                f"«Этот вывод мог быть с прошлого депозита или бонуса». Тогда чистые потери = "
-                f"{format_number(sums)} − 1 000 = {format_number(sums - 1000)} сом.\n\n"
-                f"Размер кэшбэка зависит от суммы потерь:\n"
-                f"От 500 до 4 999 сом — 10%,\n"
-                f"от 5 000 до 29 999 сом — 15%,\n"
-                f"от 30 000 и выше — 20%.\n\n"
-                f"В вашем случае {format_number(sums)} сом × {percent}% = {format_number(cashback)} сом кэшбэка.\n"
-                f"Если нужно — помогу посчитать другие суммы!"
+                f"Для кэшбэка нужно минимум 500 сом чистых потерь за 24 часа.\n"
+                f"Чистые потери = депозиты − выводы.\n\n"
+                f"Например: {format_number(sums)} − 1 000 = {format_number(sums - 1000)} сом\n\n"
+                f"Размер кэшбэка:\n"
+                f"500–4 999 сом — 10%,\n"
+                f"5 000–29 999 сом — 15%,\n"
+                f"от 30 000 — 20%\n\n"
+                f"{format_number(sums)} сом × {percent}% = {format_number(cashback)} сом кэшбэка."
             )
             return
 
@@ -138,65 +140,50 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if choice != 'кэшбэк':
             if user_spam_status.get(user_id, True):
                 await update.message.reply_text(
-                    "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки. "
-                    "Если же хотите чтобы это сообщение больше не появлялось, то напишите stopspam"
+                    "Обязательно перепроверяйте итоговые суммы! Это для вашей страховки.\n"
+                    "Чтобы отключить это сообщение — напишите stopspam"
                 )
-            else:
-                if count % 10 == 0:
-                    await update.message.reply_text(
-                        "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки."
-                    )
+            elif count % 10 == 0:
+                await update.message.reply_text(
+                    "Напоминание: перепроверьте итоговые суммы ставок!"
+                )
     else:
         await update.message.reply_text("Сначала выбери бонус или кэшбэк кнопкой ниже.", reply_markup=markup)
 
-
-# --- Flask + webhook часть ---
-
+# --- Flask + Webhook ---
 app = Flask(__name__)
 
-BOT_TOKEN = os.environ.get("BOT_TOKEN")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 if not BOT_TOKEN:
     raise RuntimeError("BOT_TOKEN environment variable not set")
 
 bot = Bot(token=BOT_TOKEN)
 application = ApplicationBuilder().token(BOT_TOKEN).build()
 
-# Добавляем обработчики
-application.add_handler(CommandHandler('start', start))
-application.add_handler(CommandHandler('status', status))
-application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
+application.add_handler(CommandHandler("start", start))
+application.add_handler(CommandHandler("status", status))
+application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-PORT = int(os.environ.get('PORT', '5000'))
-
-@app.route('/webhook/' + BOT_TOKEN, methods=['POST'])
+@app.route(f"/webhook/{BOT_TOKEN}", methods=["POST"])
 def webhook():
     if request.method == "POST":
         update = Update.de_json(request.get_json(force=True), bot)
-        loop = asyncio.get_event_loop()
-        # Корректно ставим обновление в очередь
-        asyncio.run_coroutine_threadsafe(application.update_queue.put(update), loop)
+        asyncio.run(application.process_update(update))
         return "OK"
     else:
         abort(405)
 
-@app.route('/')
-def index():
-    return "Bot is running"
+@app.route("/")
+def home():
+    return "Bot is alive!"
 
 async def set_webhook():
-    url = os.environ.get("WEBHOOK_URL")
-    if not url:
-        print("WEBHOOK_URL is not set. Please set it to your deployed URL + /webhook/<TOKEN>")
-        return False
-    full_url = f"{url}/webhook/{BOT_TOKEN}"
-    success = await bot.set_webhook(full_url)
-    if success:
-        print(f"Webhook was set to {full_url}")
-    else:
-        print("Failed to set webhook")
-    return success
+    if not WEBHOOK_URL:
+        print("WEBHOOK_URL not set.")
+        return
+    await bot.set_webhook(f"{WEBHOOK_URL}/webhook/{BOT_TOKEN}")
 
-if __name__ == '__main__':
-    # Ставим webhook и запускаем Flask сервер
+if __name__ == "__main__":
     asyncio.run(set_webhook())
-    app.run(host='0.0.0.0', port=PORT)
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
