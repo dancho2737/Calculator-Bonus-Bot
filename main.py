@@ -4,18 +4,16 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 import os
 import math
 import threading
+import asyncio
 
-# Получаем токен и порт из переменных окружения
 TOKEN = os.environ.get("BOT_TOKEN")
 PORT = int(os.environ.get("PORT", 5000))
 
-# Данные по пользователям
 user_choice_data = {}
 user_active_status = {}
 user_spam_status = {}
 user_count_calc = {}
 
-# Клавиатура
 reply_keyboard = [['Крипто/Бай бонус 20'], ['Депозит бонус 10']]
 markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
 
@@ -106,11 +104,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Сначала выбери бонус кнопкой ниже.", reply_markup=markup)
 
 def run_bot():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("status", status))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    app.run_polling()
+
+    loop.run_until_complete(app.run_polling())
 
 flask_app = Flask(__name__)
 
@@ -119,6 +121,5 @@ def index():
     return "Бот работает! 🎉"
 
 if __name__ == '__main__':
-    # Запускаем бота в отдельном потоке, Flask — в главном
     threading.Thread(target=run_bot).start()
     flask_app.run(host="0.0.0.0", port=PORT)
