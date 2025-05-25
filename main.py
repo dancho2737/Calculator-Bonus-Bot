@@ -1,34 +1,17 @@
-from flask import Flask, request
 from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 import os
 import math
-import asyncio
-
-TOKEN = os.environ.get("BOT_TOKEN")
-WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
-PORT = int(os.environ.get("PORT", 5000))
-
-app = Flask(__name__)
 
 user_choice_data = {}
 user_active_status = {}
-user_spam_status = {}
-user_count_calc = {}
 
 reply_keyboard = [['Крипто/Бай бонус 20'], ['Депозит бонус 10']]
 markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
 
-def format_number(n):
-    n_ceil = math.ceil(n)
-    s = f"{n_ceil:,}"
-    return s.replace(",", " ")
-
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_active_status[user_id] = True
-    user_spam_status[user_id] = True
-    user_count_calc[user_id] = 0
     await update.message.reply_text(
         "Бот активирован. Выбери бонус для расчёта и введи сумму:",
         reply_markup=markup
@@ -37,8 +20,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     is_active = user_active_status.get(user_id, True)
-    msg = "Бот сейчас активен." if is_active else "Бот сейчас остановлен. Напиши /start чтобы включить."
-    await update.message.reply_text(msg)
+
+    if is_active:
+        await update.message.reply_text("Бот сейчас активен.")
+    else:
+        await update.message.reply_text("Бот сейчас остановлен. Напиши /start чтобы включить.")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -50,11 +36,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if text == "stop":
         user_active_status[user_id] = False
         await update.message.reply_text("Бот остановлен. Чтобы запустить снова, напиши /start.")
-        return
-
-    if text == "stopspam":
-        user_spam_status[user_id] = False
-        await update.message.reply_text("Предупреждения больше показываться не будут, кроме каждых 10 подсчётов.")
         return
 
     if text in ['крипто/бай бонус 20', 'депозит бонус 10']:
@@ -86,69 +67,22 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         crash = sums3 * 10 + sums
 
         result = (
-            f"Для выполнения условий отыгрыша с вашей суммой бонуса потребуется сделать следующие объёмы ставок:\n\n"
-            f"🔹 Слоты (100%) — отыграть {format_number(slots)} сомов\n"
-            f"🔹 Roulette (30%) — отыграть {format_number(roulette)} сомов\n"
-            f"🔹 Blackjack (20%) — отыграть {format_number(blackjack)} сомов\n"
-            f"🔹 Остальные настольные, crash и лайв-казино (10%) — отыграть {format_number(crash)} сомов"
+            f"Для выполнения условий отыгрыша с вашей суммой бонуса потребуется сделать следующие объёмы ставок в разных играх:\n\n"
+            f"🔹 Слоты (100%) — отыграть {math.ceil(slots)} сомов\n"
+            f"🔹 Roulette (30%) — отыграть {math.ceil(roulette)} сомов\n"
+            f"🔹 Blackjack (20%) — отыграть {math.ceil(blackjack)} сомов\n"
+            f"🔹 Остальные настольные, crash игры и лайв-казино игры (10%) — отыграть {math.ceil(crash)} сомов"
         )
 
         await update.message.reply_text(result)
-
-        user_count_calc[user_id] = user_count_calc.get(user_id, 0) + 1
-        count = user_count_calc[user_id]
-
-        if user_spam_status.get(user_id, True):
-            await update.message.reply_text(
-                "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки. "
-                "Если хотите отключить эти сообщения — напишите stopspam"
-            )
-        elif count % 10 == 0:
-            await update.message.reply_text(
-                "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки."
-            )
     else:
         await update.message.reply_text("Сначала выбери бонус кнопкой ниже.", reply_markup=markup)
 
+if name == 'main':
+    app = ApplicationBuilder().token(os.environ.get("BOT_TOKEN")).build()
 
-application = Application.builder().token(TOKEN).build()
+    app.add_handler(CommandHandler('start', start))
+    app.add_handler(CommandHandler('status', status))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-application.add_handler(CommandHandler("start", start))
-application.add_handler(CommandHandler("status", status))
-application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
-
-# Flask webhook handler — кладём update в очередь
-@app.route('/', methods=['POST'])
-def webhook():
-    update = Update.de_json(request.get_json(force=True), application.bot)
-    # Кладём в очередь для обработки ботом
-    application.update_queue.put_nowait(update)
-    return "ok"
-
-
-@app.route('/', methods=['GET'])
-def index():
-    return "Бот запущен и работает"
-
-
-async def start_bot():
-    # Устанавливаем webhook
-    await application.bot.set_webhook(WEBHOOK_URL)
-    print("Webhook установлен")
-
-    # Запускаем бота (обрабатываем очередь)
-    await application.initialize()
-    await application.start()
-    print("Бот запущен")
-
-
-if __name__ == '__main__':
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-
-    # Запускаем бота в фоне (async)
-    loop.create_task(start_bot())
-
-    # Запускаем Flask (синхронно)
-    app.run(host="0.0.0.0", port=PORT)
+    app.run_polling()
