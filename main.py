@@ -1,22 +1,35 @@
+from flask import Flask, request
 from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    MessageHandler,
+    ContextTypes,
+    filters,
+)
+
 import os
 import math
+import asyncio
 
+TOKEN = os.environ.get("BOT_TOKEN")
+WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
+
+# Словари для состояния
 user_choice_data = {}
 user_active_status = {}
-user_spam_status = {}     # True — показывать полное предупреждение, False — выключил (только короткое каждые 10 подсчётов)
-user_count_calc = {}      # Счётчик подсчётов для каждого пользователя
+user_spam_status = {}
+user_count_calc = {}
 
 reply_keyboard = [['Крипто/Бай бонус 20'], ['Депозит бонус 10']]
 markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
 
 def format_number(n):
-    # Округляем вверх и форматируем число с пробелами для тысяч
     n_ceil = math.ceil(n)
     s = f"{n_ceil:,}"
     return s.replace(",", " ")
 
+# Команда /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_active_status[user_id] = True
@@ -27,14 +40,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=markup
     )
 
+# Команда /status
 async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     is_active = user_active_status.get(user_id, True)
-    if is_active:
-        await update.message.reply_text("Бот сейчас активен.")
-    else:
-        await update.message.reply_text("Бот сейчас остановлен. Напиши /start чтобы включить.")
+    msg = "Бот сейчас активен." if is_active else "Бот сейчас остановлен. Напиши /start чтобы включить."
+    await update.message.reply_text(msg)
 
+# Обработка обычных сообщений
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     text = update.message.text.strip().lower()
@@ -81,40 +94,58 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         crash = sums3 * 10 + sums
 
         result = (
-            f"Для выполнения условий отыгрыша с вашей суммой бонуса потребуется сделать следующие объёмы ставок в разных играх:\n\n"
+            f"Для выполнения условий отыгрыша с вашей суммой бонуса потребуется сделать следующие объёмы ставок:\n\n"
             f"🔹 Слоты (100%) — отыграть {format_number(slots)} сомов\n"
             f"🔹 Roulette (30%) — отыграть {format_number(roulette)} сомов\n"
             f"🔹 Blackjack (20%) — отыграть {format_number(blackjack)} сомов\n"
-            f"🔹 Остальные настольные, crash игры и лайв-казино игры (10%) — отыграть {format_number(crash)} сомов"
+            f"🔹 Остальные настольные, crash и лайв-казино (10%) — отыграть {format_number(crash)} сомов"
         )
 
         await update.message.reply_text(result)
 
-        # Увеличиваем счётчик подсчётов
         user_count_calc[user_id] = user_count_calc.get(user_id, 0) + 1
         count = user_count_calc[user_id]
 
         if user_spam_status.get(user_id, True):
-            # Спам включён — показываем полное предупреждение всегда
             await update.message.reply_text(
                 "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки. "
-                "Если же хотите чтобы это сообщение больше не появлялось, то напишите stopspam"
+                "Если хотите отключить эти сообщения — напишите stopspam"
             )
-        else:
-            # Спам выключен — показываем короткое предупреждение только при каждом 10-м подсчёте
-            if count % 10 == 0:
-                await update.message.reply_text(
-                    "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки."
-                )
-
+        elif count % 10 == 0:
+            await update.message.reply_text(
+                "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки."
+            )
     else:
         await update.message.reply_text("Сначала выбери бонус кнопкой ниже.", reply_markup=markup)
 
+
+# Flask-приложение
+flask_app = Flask(__name__)
+
+# Telegram Application
+application = Application.builder().token(TOKEN).build()
+
+application.add_handler(CommandHandler("start", start))
+application.add_handler(CommandHandler("status", status))
+application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+# Точка входа Telegram Webhook
+@flask_app.post("/")
+async def webhook() -> str:
+    update = Update.de_json(await request.get_json(force=True), application.bot)
+    await application.update_queue.put(update)
+    return "ok"
+
+# Установка Webhook при запуске
+async def main():
+    await application.bot.set_webhook(WEBHOOK_URL)
+    await application.initialize()
+    await application.start()
+    print("Бот запущен (WebHook)")
+    
+    # Flask run
+    flask_app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
+# Запуск
 if __name__ == '__main__':
-    app = ApplicationBuilder().token(os.environ.get("BOT_TOKEN")).build()
-
-    app.add_handler(CommandHandler('start', start))
-    app.add_handler(CommandHandler('status', status))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
-    app.run_polling()
+    asyncio.run(main())
