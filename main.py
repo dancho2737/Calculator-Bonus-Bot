@@ -1,15 +1,16 @@
-from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 import os
 import math
+from flask import Flask, request, abort
+from telegram import Update, Bot, ReplyKeyboardMarkup
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
-# Хранилища данных пользователей
+# --- Хранилища данных пользователей ---
 user_choice_data = {}
 user_active_status = {}
-user_spam_status = {}     # True — показывать предупреждения, False — только каждые 10 подсчётов
-user_count_calc = {}      # Счётчик подсчётов для каждого пользователя
+user_spam_status = {}
+user_count_calc = {}
 
-# Клавиатура
+# --- Клавиатура ---
 reply_keyboard = [['Крипто/Бай бонус 20'], ['Депозит бонус 10'], ['Кэшбэк']]
 markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
 
@@ -18,6 +19,7 @@ def format_number(n):
     s = f"{n_ceil:,}"
     return s.replace(",", " ")
 
+# --- Обработчики команд и сообщений ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_active_status[user_id] = True
@@ -129,11 +131,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
 
-        # Счётчик подсчётов
         user_count_calc[user_id] = user_count_calc.get(user_id, 0) + 1
         count = user_count_calc[user_id]
 
-        if choice != 'кэшбэк':  # Для кешбэка не показываем напоминание
+        if choice != 'кэшбэк':
             if user_spam_status.get(user_id, True):
                 await update.message.reply_text(
                     "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки. "
@@ -144,23 +145,59 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     await update.message.reply_text(
                         "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки."
                     )
-
     else:
         await update.message.reply_text("Сначала выбери бонус или кэшбэк кнопкой ниже.", reply_markup=markup)
 
-def main():
-    TOKEN = os.environ.get("BOT_TOKEN")
-    if not TOKEN:
-        print("Ошибка: BOT_TOKEN не установлен в переменных окружения")
-        return
 
-    app = ApplicationBuilder().token(TOKEN).build()
+# --- Flask + webhook часть ---
 
-    app.add_handler(CommandHandler('start', start))
-    app.add_handler(CommandHandler('status', status))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+app = Flask(__name__)
 
-    app.run_polling()
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
+if not BOT_TOKEN:
+    raise RuntimeError("BOT_TOKEN environment variable not set")
 
-if __name__ == "__main__":
-    main()
+bot = Bot(token=BOT_TOKEN)
+application = ApplicationBuilder().token(BOT_TOKEN).build()
+
+# Добавляем обработчики
+application.add_handler(CommandHandler('start', start))
+application.add_handler(CommandHandler('status', status))
+application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
+
+# Порт для Render
+PORT = int(os.environ.get('PORT', '5000'))
+
+@app.route('/webhook/' + BOT_TOKEN, methods=['POST'])
+def webhook():
+    if request.method == "POST":
+        update = Update.de_json(request.get_json(force=True), bot)
+        # Обработка обновления через Application
+        application.update_queue.put(update)
+        return "OK"
+    else:
+        abort(405)
+
+@app.route('/')
+def index():
+    return "Bot is running"
+
+def set_webhook():
+    url = os.environ.get("WEBHOOK_URL")
+    if not url:
+        print("WEBHOOK_URL is not set. Please set it to your deployed URL + /webhook/<TOKEN>")
+        return False
+    full_url = f"{url}/webhook/{BOT_TOKEN}"
+    success = bot.set_webhook(full_url)
+    if success:
+        print(f"Webhook was set to {full_url}")
+    else:
+        print("Failed to set webhook")
+    return success
+
+
+if __name__ == '__main__':
+    # При запуске ставим webhook
+    set_webhook()
+    # Запускаем Flask
+    app.run(host='0.0.0.0', port=PORT)
