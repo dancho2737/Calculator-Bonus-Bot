@@ -7,6 +7,9 @@ user_choice_data = {}
 user_active_status = {}
 user_spam_status = {}
 user_count_calc = {}
+user_authenticated = {}  # Пользователи, прошедшие проверку пароля
+
+PASSWORD = "starzbetbot"
 
 reply_keyboard = [['Крипто/Бай бонус 20'], ['Депозит бонус 10']]
 markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
@@ -17,6 +20,11 @@ def format_number(n):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
+
+    if not user_authenticated.get(user_id):
+        await update.message.reply_text("Введите пароль для доступа к боту:")
+        return
+
     user_active_status[user_id] = True
     user_spam_status[user_id] = True
     user_count_calc[user_id] = 0
@@ -27,31 +35,43 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
+    if not user_authenticated.get(user_id):
+        await update.message.reply_text("Сначала введите пароль. Напиши /start.")
+        return
+
     is_active = user_active_status.get(user_id, True)
-    if is_active:
-        await update.message.reply_text("Бот сейчас активен.")
-    else:
-        await update.message.reply_text("Бот сейчас остановлен. Напиши /start чтобы включить.")
+    await update.message.reply_text("Бот сейчас активен." if is_active else "Бот сейчас остановлен. Напиши /start чтобы включить.")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    text = update.message.text.strip().lower()
+    text = update.message.text.strip()
+
+    if not user_authenticated.get(user_id):
+        if text == PASSWORD:
+            user_authenticated[user_id] = True
+            user_active_status[user_id] = True
+            user_spam_status[user_id] = True
+            user_count_calc[user_id] = 0
+            await update.message.reply_text("Доступ разрешён! Выбери бонус и введи сумму:", reply_markup=markup)
+        else:
+            await update.message.reply_text("Неверный пароль. Повторите попытку.")
+        return
 
     if not user_active_status.get(user_id, True):
         return
 
-    if text == "stop":
+    if text.lower() == "stop":
         user_active_status[user_id] = False
         await update.message.reply_text("Бот остановлен. Чтобы запустить снова, напиши /start.")
         return
 
-    if text == "stopspam":
+    if text.lower() == "stopspam":
         user_spam_status[user_id] = False
         await update.message.reply_text("Предупреждения больше показываться не будут, кроме каждых 10 подсчётов.")
         return
 
-    if text in ['крипто/бай бонус 20', 'депозит бонус 10']:
-        user_choice_data[user_id] = text
+    if text.lower() in ['крипто/бай бонус 20', 'депозит бонус 10']:
+        user_choice_data[user_id] = text.lower()
         await update.message.reply_text(f"Выбран: {text}. Теперь введи сумму.")
         return
 
