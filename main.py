@@ -5,17 +5,15 @@ import math
 
 user_choice_data = {}
 user_active_status = {}
-user_spam_status = {}     # True — показывать полное предупреждение, False — выключил (только короткое каждые 10 подсчётов)
-user_count_calc = {}      # Счётчик подсчётов для каждого пользователя
+user_spam_status = {}
+user_count_calc = {}
 
 reply_keyboard = [['Крипто/Бай бонус 20'], ['Депозит бонус 10']]
 markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
 
 def format_number(n):
-    # Округляем вверх и форматируем число с пробелами для тысяч
     n_ceil = math.ceil(n)
-    s = f"{n_ceil:,}"
-    return s.replace(",", " ")
+    return f"{n_ceil:,}".replace(",", " ")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -90,23 +88,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await update.message.reply_text(result)
 
-        # Увеличиваем счётчик подсчётов
         user_count_calc[user_id] = user_count_calc.get(user_id, 0) + 1
         count = user_count_calc[user_id]
 
         if user_spam_status.get(user_id, True):
-            # Спам включён — показываем полное предупреждение всегда
             await update.message.reply_text(
                 "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки. "
                 "Если же хотите чтобы это сообщение больше не появлялось, то напишите stopspam"
             )
         else:
-            # Спам выключен — показываем короткое предупреждение только при каждом 10-м подсчёте
             if count % 10 == 0:
                 await update.message.reply_text(
                     "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки."
                 )
-
     else:
         await update.message.reply_text("Сначала выбери бонус кнопкой ниже.", reply_markup=markup)
 
@@ -118,4 +112,4 @@ if __name__ == '__main__':
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     app.run_polling()
-                                  
+    
