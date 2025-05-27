@@ -77,36 +77,41 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if user_id in user_choice_data:
         choice = user_choice_data[user_id]
-        try:
-            sums = float(text.replace(',', '.'))
-        except ValueError:
-            await update.message.reply_text("Пожалуйста, введи корректное число.")
-            return
+        parts = text.replace(",", ".").split()
+        results = []
 
-        if choice == 'депозит бонус 10':
-            sums2 = sums * 0.10
-            sums3 = sums2 * 15
-        elif choice == 'крипто/бай бонус 20':
-            sums2 = sums * 0.20
-            sums3 = sums2 * 20
+        for part in parts:
+            try:
+                amount = float(part)
+            except ValueError:
+                continue  # пропускаем нечисловые значения
+
+            if choice == 'депозит бонус 10':
+                bonus = amount * 0.10
+                wager = bonus * 15
+            elif choice == 'крипто/бай бонус 20':
+                bonus = amount * 0.20
+                wager = bonus * 20
+            else:
+                continue
+
+            slots = wager + amount
+            roulette = wager * 3.33 + amount
+            blackjack = wager * 5 + amount
+            crash = wager * 10 + amount
+
+            results.append(
+                f"Сумма: {format_number(amount)} сомов\n"
+                f"🔹 Слоты (100%) — {format_number(slots)}\n"
+                f"🔹 Roulette (30%) — {format_number(roulette)}\n"
+                f"🔹 Blackjack (20%) — {format_number(blackjack)}\n"
+                f"🔹 Crash/другое (10%) — {format_number(crash)}\n"
+            )
+
+        if results:
+            await update.message.reply_text("Результаты расчёта:\n\n" + "\n".join(results))
         else:
-            await update.message.reply_text("Ошибка выбора бонуса.")
-            return
-
-        slots = sums3 + sums
-        roulette = sums3 * 3.33 + sums
-        blackjack = sums3 * 5 + sums
-        crash = sums3 * 10 + sums
-
-        result = (
-            f"Для выполнения условий отыгрыша с вашей суммой бонуса потребуется сделать следующие объёмы ставок в разных играх:\n\n"
-            f"🔹 Слоты (100%) — отыграть {format_number(slots)} сомов\n"
-            f"🔹 Roulette (30%) — отыграть {format_number(roulette)} сомов\n"
-            f"🔹 Blackjack (20%) — отыграть {format_number(blackjack)} сомов\n"
-            f"🔹 Остальные настольные, crash игры и лайв-казино игры (10%) — отыграть {format_number(crash)} сомов"
-        )
-
-        await update.message.reply_text(result)
+            await update.message.reply_text("Не удалось распознать ни одной суммы. Введите числа корректно.")
 
         user_count_calc[user_id] = user_count_calc.get(user_id, 0) + 1
         count = user_count_calc[user_id]
@@ -114,13 +119,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if user_spam_status.get(user_id, True):
             await update.message.reply_text(
                 "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки. "
-                "Если же хотите чтобы это сообщение больше не появлялось, то напишите stopspam"
+                "Если хотите отключить это сообщение — напишите stopspam."
             )
-        else:
-            if count % 10 == 0:
-                await update.message.reply_text(
-                    "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки."
-                )
+        elif count % 10 == 0:
+            await update.message.reply_text(
+                "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки."
+            )
     else:
         await update.message.reply_text("Сначала выбери бонус кнопкой ниже.", reply_markup=markup)
 
@@ -132,4 +136,3 @@ if __name__ == '__main__':
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     app.run_polling()
-    
