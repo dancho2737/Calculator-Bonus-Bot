@@ -9,7 +9,7 @@ user_spam_status = {}
 user_count_calc = {}
 user_authenticated = {}
 
-PASSWORD = "starzbetbot"
+PASSWORD = "starzbot"
 
 reply_keyboard = [['Крипто/Бай бонус 20'], ['Депозит бонус 10']]
 markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
