@@ -44,7 +44,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_choice_data.pop(user_id, None)
     user_count_calc[user_id] = 0
     user_spam_status[user_id] = True
-    user_waiting_for_password.add(user_id)
+    # УБРАЛИ ЭТУ СТРОКУ: user_waiting_for_password.add(user_id)
 
     await update.message.reply_text(
         "Выберите язык / Please choose a language / Lütfen bir dil seçin:",
@@ -102,7 +102,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if chosen_lang:
             user_language[user_id] = chosen_lang
             user_waiting_for_language.remove(user_id)
-            user_waiting_for_password.add(user_id)
+            user_waiting_for_password.add(user_id)  # добавляем ожидание пароля именно здесь
             texts = {
                 'ru': "Язык выбран: Русский.\nТеперь введите пароль:",
                 'en': "Language set to English.\nPlease enter the password:",
@@ -265,62 +265,32 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         elif lang == 'en':
             result_text = (
                 f"Amount: {format_number(num)} soms\n"
-                f"🔹 Slots (100%) — wager {format_number(slots)} soms\n"
-                f"🔹 Roulette (30%) — wager {format_number(roulette)} soms\n"
-                f"🔹 Blackjack (20%) — wager {format_number(blackjack)} soms\n"
-                f"🔹 Other table games, crash games and live casino (10%) — wager {format_number(crash)} soms"
+                f"🔹 Slots (100%) — play through {format_number(slots)} soms\n"
+                f"🔹 Roulette (30%) — play through {format_number(roulette)} soms\n"
+                f"🔹 Blackjack (20%) — play through {format_number(blackjack)} soms\n"
+                f"🔹 Other table, crash, and live casino games (10%) — play through {format_number(crash)} soms"
             )
-        else:  # турецкий
+        else:
             result_text = (
                 f"Tutar: {format_number(num)} som\n"
-                f"🔹 Slotlar (100%) — oynanması gereken {format_number(slots)} som\n"
-                f"🔹 Rulet (30%) — oynanması gereken {format_number(roulette)} som\n"
-                f"🔹 Blackjack (20%) — oynanması gereken {format_number(blackjack)} som\n"
-                f"🔹 Diğer masa oyunları, crash oyunları ve canlı casino (10%) — oynanması gereken {format_number(crash)} som"
+                f"🔹 Slotlar (100%) — {format_number(slots)} som oynayın\n"
+                f"🔹 Rulet (30%) — {format_number(roulette)} som oynayın\n"
+                f"🔹 Blackjack (20%) — {format_number(blackjack)} som oynayın\n"
+                f"🔹 Diğer masa, crash ve canlı casino oyunları (10%) — {format_number(crash)} som oynayın"
             )
 
         results.append(result_text)
 
-    intro_text = {
-        'ru': "Для выполнения условий отыгрыша с вашими суммами бонуса потребуется сделать следующие объёмы ставок в разных играх:\n",
-        'en': "To meet the wagering requirements for your bonus amounts, you will need to place the following bets in different games:\n",
-        'tr': "Bonus tutarları için çevrim şartlarını karşılamak amacıyla farklı oyunlarda yapılması gereken bahis miktarları:\n"
-    }
-
-    result_text = intro_text[lang] + "\n\n".join(results)
-    await update.message.reply_text(result_text)
-
-    user_count_calc[user_id] = user_count_calc.get(user_id, 0) + 1
-    count = user_count_calc[user_id]
-
-    if user_spam_status.get(user_id, True):
-        await update.message.reply_text(
-            {
-                'ru': "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки. Если же хотите чтобы это сообщение больше не появлялось, то напишите stopspam",
-                'en': "Make sure to double-check the final amounts! This is for your own protection. If you want to stop seeing this message, type stopspam.",
-                'tr': "Lütfen son tutarları mutlaka kontrol edin! Bu sizin güvenliğiniz için. Bu mesajı görmek istemiyorsanız stopspam yazabilirsiniz."
-            }[lang]
-        )
-    else:
-        if count % 10 == 0:
-            await update.message.reply_text(
-                {
-                    'ru': "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки.",
-                    'en': "Make sure to double-check the final amounts! This is for your own protection.",
-                    'tr': "Lütfen son tutarları mutlaka kontrol edin! Bu sizin güvenliğiniz için."
-                }[lang]
-            )
+    await update.message.reply_text("\n\n".join(results))
 
 
-if __name__ == "__main__":
-    TOKEN = os.getenv("TOKEN") or "BOT_TOKEN"
-
-    app = ApplicationBuilder().token(TOKEN).build()
+if __name__ == '__main__':
+    token = os.getenv('TOKEN')
+    app = ApplicationBuilder().token(token).build()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("status", status))
     app.add_handler(CommandHandler("lang", change_language))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    print("Bot started")
     app.run_polling()
