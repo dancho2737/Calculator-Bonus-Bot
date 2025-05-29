@@ -109,9 +109,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 'en': "Language set to English.\nPlease enter the password:",
                 'tr': "Dil Türkçe olarak seçildi.\nLütfen şifreyi girin:"
             }
-            await
-update.message.reply_text(text
-s[chosen_lang], reply_markup=ReplyKeyboardRemove())
+            await update.message.reply_text(texts[chosen_lang], reply_markup=ReplyKeyboardRemove())
         else:
             await update.message.reply_text(
                 "Неверный выбор языка. Пожалуйста, выберите из кнопок.",
