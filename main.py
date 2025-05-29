@@ -1,7 +1,12 @@
 from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes, ConversationHandler
 import os
 import math
+
+PASSWORD = "starzbot"
+
+# Состояния для ConversationHandler
+LANGUAGE_SELECTION = 1
 
 user_choice_data = {}
 user_active_status = {}
@@ -9,69 +14,59 @@ user_spam_status = {}
 user_count_calc = {}
 user_authenticated = {}
 user_language = {}
-
-PASSWORD = "starzbot"
+awaiting_language = set()  # множество пользователей, которые выбирают язык
 
 translations = {
     'ru': {
         'enter_password': "Введите пароль для доступа к боту:",
         'access_granted': "Доступ разрешён! Выбери бонус и введи сумму:",
-        'bot_activated': "Бот активирован. Выбери бонус для расчёта и введи сумму:",
         'choose_bonus': "Выбери бонус для расчёта и введи сумму:",
         'bonus_crypto': "Крипто/Бай бонус 20",
         'bonus_deposit': "Депозит бонус 10",
         'wrong_password': "Неверный пароль. Повторите попытку.",
         'choose_bonus_button': "Сначала выбери бонус кнопкой ниже.",
-        'bot_stopped': "Бот сейчас остановлен. Напиши /start чтобы включить.",
-        'bot_active': "Бот сейчас активен.",
-        'stop_message': "Бот остановлен. Чтобы запустить снова, напиши /start.",
-        'stopspam_message': "Предупреждения больше показываться не будут, кроме каждых 10 подсчётов.",
-        'check_sums': ("Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки. "
-                       "Если же хотите чтобы это сообщение больше не появлялось, то напишите stopspam"),
-        'check_sums_short': "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки.",
         'invalid_number': "Пожалуйста, введи корректное число или числа.",
         'wager_intro_single': "Для выполнения условий отыгрыша с вашей суммой бонуса потребуется сделать следующие объёмы ставок в разных играх:\n",
-        'wager_intro_plural': "Для выполнения условий отыгрыша с вашими суммами бонуса потребуется сделать следующие объёмы ставок в разных играх:\n"
+        'wager_intro_plural': "Для выполнения условий отыгрыша с вашими суммами бонуса потребуется сделать следующие объёмы ставок в разных играх:\n",
+        'language_prompt': "Выберите язык:",
+        'check_sums': ("Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки. "
+                       "Если не хотите видеть это сообщение, напишите stopspam"),
+        'check_sums_short': "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки.",
+        'stopspam_message': "Предупреждения будут показываться реже."
     },
     'en': {
         'enter_password': "Enter password to access the bot:",
         'access_granted': "Access granted! Choose a bonus and enter the amount:",
-        'bot_activated': "Bot activated. Choose a bonus and enter the amount:",
         'choose_bonus': "Choose a bonus and enter the amount:",
         'bonus_crypto': "Crypto/Bai bonus 20",
         'bonus_deposit': "Deposit bonus 10",
         'wrong_password': "Wrong password. Please try again.",
         'choose_bonus_button': "Please choose a bonus using the button below first.",
-        'bot_stopped': "Bot is stopped now. Type /start to activate.",
-        'bot_active': "Bot is active now.",
-        'stop_message': "Bot stopped. To start again, type /start.",
-        'stopspam_message': "Warnings will no longer appear except every 10 counts.",
-        'check_sums': ("Please double-check the final sums! This is for your own safety. "
-                       "If you don't want to see this message again, type stopspam"),
-        'check_sums_short': "Please double-check the final sums! This is for your own safety.",
         'invalid_number': "Please enter a valid number or numbers.",
         'wager_intro_single': "To meet the wagering conditions, you need to:\n",
-        'wager_intro_plural': "To meet the wagering conditions, you need to:\n"
+        'wager_intro_plural': "To meet the wagering conditions, you need to:\n",
+        'language_prompt': "Choose your language:",
+        'check_sums': ("Please double-check the final sums! This is for your own safety. "
+                       "If you don't want to see this message, type stopspam"),
+        'check_sums_short': "Please double-check the final sums! This is for your own safety.",
+        'stopspam_message': "Warnings will appear less frequently."
     },
     'tr': {
         'enter_password': "Bota erişim için şifreyi girin:",
         'access_granted': "Erişim verildi! Bir bonus seç ve miktarı gir:",
-        'bot_activated': "Bot aktif edildi. Bir bonus seç ve miktarı gir:",
         'choose_bonus': "Bir bonus seç ve miktarı gir:",
         'bonus_crypto': "Kripto/Bay bonus 20",
         'bonus_deposit': "Depozito bonus 10",
         'wrong_password': "Yanlış şifre. Lütfen tekrar deneyin.",
         'choose_bonus_button': "Lütfen önce aşağıdaki butondan bir bonus seçin.",
-        'bot_stopped': "Bot şu anda durduruldu. Başlatmak için /start yazın.",
-        'bot_active': "Bot şu anda aktif.",
-        'stop_message': "Bot durduruldu. Yeniden başlatmak için /start yazın.",
-        'stopspam_message': "Uyarılar artık sadece 10 hesaplamada bir gösterilecek.",
-        'check_sums': ("Lütfen nihai tutarları tekrar kontrol edin! Bu sizin güvenliğiniz için. "
-                       "Bu mesajı tekrar görmek istemiyorsanız stopspam yazın"),
-        'check_sums_short': "Lütfen nihai tutarları tekrar kontrol edin! Bu sizin güvenliğiniz için.",
         'invalid_number': "Lütfen geçerli bir sayı veya sayılar girin.",
         'wager_intro_single': "Oynatma koşullarını karşılamak için ihtiyacınız olan miktar:\n",
-        'wager_intro_plural': "Oynatma koşullarını karşılamak için ihtiyacınız olan miktarlar:\n"
+        'wager_intro_plural': "Oynatma koşullarını karşılamak için ihtiyacınız olan miktarlar:\n",
+        'language_prompt': "Dil seçin:",
+        'check_sums': ("Lütfen nihai tutarları tekrar kontrol edin! Bu sizin güvenliğiniz için. "
+                       "Bu mesajı görmek istemiyorsanız stopspam yazın"),
+        'check_sums_short': "Lütfen nihai tutarları tekrar kontrol edin! Bu sizin güvenliğiniz için.",
+        'stopspam_message': "Uyarılar daha seyrek gösterilecek."
     }
 }
 
@@ -94,9 +89,9 @@ async def send_bonus_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
+    lang = user_language.get(user_id, 'ru')
 
     if not user_authenticated.get(user_id):
-        lang = user_language.get(user_id, 'ru')
         await update.message.reply_text(translations[lang]['enter_password'])
         return
 
@@ -105,29 +100,20 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_count_calc[user_id] = 0
     await send_bonus_menu(update, context)
 
-async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    if not user_authenticated.get(user_id):
-        lang = user_language.get(user_id, 'ru')
-        await update.message.reply_text(translations[lang]['enter_password'])
-        return
-
-    is_active = user_active_status.get(user_id, True)
-    lang = user_language.get(user_id, 'ru')
-    await update.message.reply_text(
-        translations[lang]['bot_active'] if is_active else translations[lang]['bot_stopped']
-    )
-
 async def language(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
+    awaiting_language.add(user_id)
     reply_keyboard = [['Русский', 'English', 'Türkçe']]
     markup_lang = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
-    await update.message.reply_text("Choose your language / Язык / Dil seçin:", reply_markup=markup_lang)
+    await update.message.reply_text(translations['ru']['language_prompt'], reply_markup=markup_lang)
 
 async def language_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    selected_lang = update.message.text
+    if user_id not in awaiting_language:
+        # Если пользователь не в режиме выбора языка, пропускаем сюда
+        return
 
+    selected_lang = update.message.text
     if selected_lang == 'Русский':
         user_language[user_id] = 'ru'
     elif selected_lang == 'English':
@@ -138,12 +124,17 @@ async def language_selection(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await update.message.reply_text("Invalid language selection.")
         return
 
-    # После выбора языка сразу показываем бонусы
+    awaiting_language.remove(user_id)
+    await update.message.reply_text(f"Language set to {selected_lang}.")
     await send_bonus_menu(update, context)
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     text = update.message.text.strip()
+
+    # Если пользователь в режиме выбора языка, не обрабатываем здесь
+    if user_id in awaiting_language:
+        return
 
     lang = user_language.get(user_id, 'ru')
 
@@ -210,7 +201,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             blackjack = sums3 * 5 + num
             crash = sums3 * 10 + num
 
-            # Для en и tr добавить пробел перед "som"
             if lang in ['en', 'tr']:
                 results.append(
                     f"Amount: {format_number(num)} som\n"
@@ -219,7 +209,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     f"🔹 Blackjack (20%) — {format_number(blackjack)} som\n"
                     f"🔹 Other games (10%) — {format_number(crash)} som"
                 )
-            else:  # ru
+            else:
                 results.append(
                     f"Сумма: {format_number(num)} сомов\n"
                     f"🔹 Слоты (100%) — отыграть {format_number(slots)} сомов\n"
@@ -249,9 +239,13 @@ if __name__ == '__main__':
     app = ApplicationBuilder().token(os.environ.get("BOT_TOKEN")).build()
 
     app.add_handler(CommandHandler('start', start))
-    app.add_handler(CommandHandler('status', status))
+    app.add_handler(CommandHandler('status', start))  # если нужно, можно отдельно status
     app.add_handler(CommandHandler('language', language))
+
+    # Хендлер для выбора языка — ловит любые сообщения, если пользователь в режиме выбора языка
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, language_selection))
+
+    # Основной хендлер сообщений — если пользователь не выбирает язык
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     app.run_polling()
