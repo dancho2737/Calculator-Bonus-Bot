@@ -1,316 +1,209 @@
-from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
-import os
-import math
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters, ConversationHandler
 
-user_choice_data = {}
-user_active_status = {}
-user_spam_status = {}
-user_count_calc = {}
-user_authenticated = {}
-user_language = {}  # словарь для хранения выбранного языка пользователя
-user_waiting_for_password = set()
-user_waiting_for_language = set()
+# Состояния для ConversationHandler
+LANG, PASSWORD, BONUS_TYPE, SUMS_INPUT = range(4)
 
-PASSWORD = "starzbot"
+# Пароль
+PASSWORD_CORRECT = "starzbot"
 
-# Клавиатура бонусов для каждого языка
-keyboards = {
-    'ru': [['Крипто/Бай бонус 20'], ['Депозит бонус 10']],
-    'en': [['Crypto/Buy Bonus 20'], ['Deposit Bonus 10']],
-    'tr': [['Kripto/Bay Bonus 20'], ['Depozito Bonus 10']],
+# Тексты на трёх языках
+TEXTS = {
+    'ru': {
+        'ask_password': "Введите пароль:",
+        'wrong_password': "Неверный пароль. Попробуйте ещё раз.",
+        'choose_bonus': "Выберите тип бонуса:\n1. Крипто бонус 20%\n2. Бай бонус 20%\n3. Депозитный бонус 10%",
+        'ask_sum': "Введите сумму(ы) для расчёта (можно несколько через пробел):",
+        'stopspam_enabled': "Сообщения предупреждения отключены. Чтобы включить — напишите /spam",
+        'stopspam_disabled': "Сообщения предупреждения включены.",
+        'spam_message': "Обязательно проверяйте свои итоговые суммы! Это для вашей же страховки.",
+        'invalid_sum': "Пожалуйста, введите корректное число или несколько чисел через пробел.",
+    },
+    'en': {
+        'ask_password': "Enter the password:",
+        'wrong_password': "Wrong password. Try again.",
+        'choose_bonus': "Choose bonus type:\n1. Crypto bonus 20%\n2. Buy bonus 20%\n3. Deposit bonus 10%",
+        'ask_sum': "Enter amount(s) for calculation (multiple allowed separated by space):",
+        'stopspam_enabled': "Warning messages disabled. To enable, type /spam",
+        'stopspam_disabled': "Warning messages enabled.",
+        'spam_message': "Always check your final sums! This is for your own safety.",
+        'invalid_sum': "Please enter a valid number or multiple numbers separated by spaces.",
+    },
+    'tr': {
+        'ask_password': "Parolayı girin:",
+        'wrong_password': "Yanlış parola. Tekrar deneyin.",
+        'choose_bonus': "Bonus türünü seçin:\n1. Kripto bonus %20\n2. Bay bonus %20\n3. Mevduat bonusu %10",
+        'ask_sum': "Hesaplama için miktar(lar) girin (birden fazlası aralarına boşluk koyarak):",
+        'stopspam_enabled': "Uyarı mesajları kapatıldı. Açmak için /spam yazın",
+        'stopspam_disabled': "Uyarı mesajları açıldı.",
+        'spam_message': "Her zaman nihai tutarları kontrol edin! Bu sizin güvenliğiniz için.",
+        'invalid_sum': "Lütfen geçerli bir sayı veya boşluklarla ayrılmış birden fazla sayı girin.",
+    }
 }
 
-markup_by_lang = {
-    lang: ReplyKeyboardMarkup(keyboards[lang], resize_keyboard=True)
-    for lang in keyboards
+BONUS_PERCENT = {
+    '1': 0.20,  # Crypto bonus 20%
+    '2': 0.20,  # Buy bonus 20%
+    '3': 0.10,  # Deposit bonus 10%
 }
 
-language_keyboard = ReplyKeyboardMarkup(
-    [['Русский', 'English', 'Türkçe']],
-    resize_keyboard=True,
-    one_time_keyboard=True
-)
+def format_number(num):
+    return f"{num:,}".replace(',', ' ')
 
-def format_number(n):
-    n_ceil = math.ceil(n)
-    return f"{n_ceil:,}".replace(",", " ")
+def get_bets_text(lang, slots, roulette, blackjack, crash):
+    if lang == 'ru':
+        text = (
+            "Для выполнения условий отыгрыша с вашей суммой бонуса потребуется сделать следующие объёмы ставок в разных играх:\n\n"
+            f"🔹 Слоты (100%) — отыграть {format_number(slots)} сомов\n\n"
+            f"🔹 Roulette (30%) — отыграть {format_number(roulette)} сомов\n\n"
+            f"🔹 Blackjack (20%) — отыграть {format_number(blackjack)} сомов\n\n"
+            f"🔹 Остальные настольные, crash игры и лайв-казино игры (10%) — отыграть {format_number(crash)} сомов"
+        )
+    elif lang == 'en':
+        text = (
+            "To meet the wagering requirements with your bonus amount, you need to place bets in the following games:\n\n"
+            f"🔹 Slots (100%) — wager {format_number(slots)} som\n\n"
+            f"🔹 Roulette (30%) — wager {format_number(roulette)} som\n\n"
+            f"🔹 Blackjack (20%) — wager {format_number(blackjack)} som\n\n"
+            f"🔹 Other table, crash and live casino games (10%) — wager {format_number(crash)} som"
+        )
+    elif lang == 'tr':
+        text = (
+            "Bonus tutarınızla çevrim şartlarını yerine getirmek için aşağıdaki oyunlarda şu bahis miktarlarını yapmanız gerekir:\n\n"
+            f"🔹 Slotlar (100%) — {format_number(slots)} som bahis\n\n"
+            f"🔹 Rulet (30%) — {format_number(roulette)} som bahis\n\n"
+            f"🔹 Blackjack (20%) — {format_number(blackjack)} som bahis\n\n"
+            f"🔹 Diğer masa oyunları, crash ve canlı casino oyunları (10%) — {format_number(crash)} som bahis"
+        )
+    else:
+        text = "Language not supported."
+    return text
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    user_language[user_id] = 'ru'  # по умолчанию русский
-    user_authenticated[user_id] = False
-    user_active_status[user_id] = False
-    user_choice_data.pop(user_id, None)
-    user_count_calc[user_id] = 0
-    user_spam_status[user_id] = True
-    user_waiting_for_password.discard(user_id)
-    user_waiting_for_language.add(user_id)
-
+    # Запускаем диалог, просим выбрать язык
+    keyboard = [['Русский', 'English', 'Türkçe']]
     await update.message.reply_text(
-        "Выберите язык / Please choose a language / Lütfen bir dil seçin:",
-        reply_markup=language_keyboard
+        "Выберите язык / Choose language / Dil seçin:",
+        reply_markup=None
     )
+    return LANG
 
-async def change_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    user_waiting_for_language.add(user_id)
-    user_authenticated[user_id] = False
-    user_active_status[user_id] = False
-    user_choice_data.pop(user_id, None)
-    user_count_calc[user_id] = 0
-    user_spam_status[user_id] = True
-    user_waiting_for_password.discard(user_id)
-
-    await update.message.reply_text(
-        "Пожалуйста, выберите язык:\nPlease choose language:\nLütfen bir dil seçin:",
-        reply_markup=language_keyboard
-    )
-
-async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    lang = user_language.get(user_id, 'ru')
-
-    if not user_authenticated.get(user_id):
-        texts = {
-            'ru': "Сначала введите пароль. Напиши /start.",
-            'en': "Please enter the password first. Use /start.",
-            'tr': "Lütfen önce şifreyi girin. /start komutunu kullanın."
-        }
-        await update.message.reply_text(texts[lang])
-        return
-
-    is_active = user_active_status.get(user_id, True)
-    texts_active = {
-        'ru': "Бот сейчас активен.",
-        'en': "Bot is currently active.",
-        'tr': "Bot şu anda aktif."
-    }
-    texts_inactive = {
-        'ru': "Бот сейчас остановлен. Напиши /start чтобы включить.",
-        'en': "Bot is stopped now. Use /start to activate.",
-        'tr': "Bot şu anda durduruldu. Etkinleştirmek için /start yazın."
-    }
-    await update.message.reply_text(texts_active[lang] if is_active else texts_inactive[lang])
-
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    text = update.message.text.strip()
-
-    # Проверяем выбор языка, если ждем
-    if user_id in user_waiting_for_language:
-        chosen_lang = None
-        if text.lower() in ['русский', 'ru', 'russian']:
-            chosen_lang = 'ru'
-        elif text.lower() in ['english', 'английский', 'en']:
-            chosen_lang = 'en'
-        elif text.lower() in ['türkçe', 'turkish', 'tr']:
-            chosen_lang = 'tr'
-
-        if chosen_lang:
-            user_language[user_id] = chosen_lang
-            user_waiting_for_language.remove(user_id)
-            user_waiting_for_password.add(user_id)
-            texts = {
-                'ru': "Язык выбран: Русский.\nТеперь введите пароль:",
-                'en': "Language set to English.\nPlease enter the password:",
-                'tr': "Dil Türkçe olarak seçildi.\nLütfen şifreyi girin:"
-            }
-            await update.message.reply_text(texts[chosen_lang], reply_markup=ReplyKeyboardRemove())
-        else:
-            await update.message.reply_text(
-                "Неверный выбор языка. Пожалуйста, выберите из кнопок.",
-                reply_markup=language_keyboard
-            )
-        return
-
-    # Проверка пароля, если ждем пароль
-    if user_id in user_waiting_for_password:
-        if text == PASSWORD:
-            user_authenticated[user_id] = True
-            user_active_status[user_id] = True
-            user_spam_status[user_id] = True
-            user_count_calc[user_id] = 0
-            user_waiting_for_password.remove(user_id)
-            lang = user_language.get(user_id, 'ru')
-            await update.message.reply_text(
-                {
-                    'ru': "Доступ разрешён! Выбери бонус и введи сумму:",
-                    'en': "Access granted! Choose a bonus and enter the amount:",
-                    'tr': "Erişim onaylandı! Bonus seçin ve miktarı girin:"
-                }[lang],
-                reply_markup=markup_by_lang[lang]
-            )
-        else:
-            lang = user_language.get(user_id, 'ru')
-            await update.message.reply_text(
-                {
-                    'ru': "Неверный пароль. Повторите попытку.",
-                    'en': "Incorrect password. Please try again.",
-                    'tr': "Yanlış şifre. Lütfen tekrar deneyin."
-                }[lang]
-            )
-        return
-
-    lang = user_language.get(user_id, 'ru')
-
-    # Обработка команды /lang для смены языка
-    if text.lower() == '/lang':
-        await change_language(update, context)
-        return
-
-    # Отключение сообщений spam с помощью команды stopspam
-    if text.lower() == "stopspam":
-        user_spam_status[user_id] = False
-        await update.message.reply_text(
-            {
-                'ru': "Предупреждения отключены. Сообщения больше не будут показываться, кроме каждых 7 подсчётов.",
-                'en': "Warnings disabled. Messages will no longer be shown except every 7 calculations.",
-                'tr': "Uyarılar kapatıldı. Mesajlar sadece her 7 hesaplamada bir gösterilecektir."
-            }[lang]
-        )
-        return
-
-    if not user_authenticated.get(user_id):
-        await update.message.reply_text(
-            {
-                'ru': "Пожалуйста, сначала используйте /start чтобы начать и ввести пароль.",
-                'en': "Please use /start first to begin and enter password.",
-                'tr': "Lütfen önce /start komutunu kullanarak başlayın ve şifreyi girin."
-            }[lang]
-        )
-        return
-
-    if not user_active_status.get(user_id, True):
-        return
-
-    # Обработка команды стоп
-    if text.lower() == "stop":
-        user_active_status[user_id] = False
-        await update.message.reply_text(
-            {
-                'ru': "Бот остановлен. Чтобы запустить снова, напиши /start.",
-                'en': "Bot stopped. To start again, type /start.",
-                'tr': "Bot durduruldu. Yeniden başlatmak için /start yazın."
-            }[lang]
-        )
-        return
-
-    # Проверка выбора бонуса
-    bonuses_lower = [b[0].lower() for b in keyboards[lang]]
-    if text.lower() in bonuses_lower:
-        user_choice_data[user_id] = text.lower()
-        await update.message.reply_text(
-            {
-                'ru': f"Выбран: {text}. Теперь введи сумму.",
-                'en': f"Selected: {text}. Now enter the amount.",
-                'tr': f"Seçildi: {text}. Şimdi miktarı girin."
-            }[lang]
-        )
-        return
-
-    if user_id not in user_choice_data:
-        await update.message.reply_text(
-            {
-                'ru': "Сначала выбери бонус кнопкой ниже.",
-                'en': "First select a bonus using the buttons below.",
-                'tr': "Önce aşağıdaki düğmelerden bir bonus seçin."
-            }[lang],
-            reply_markup=markup_by_lang[lang]
-        )
-        return
-
-    # Обработка числового ввода суммы
-    try:
-        sums = [float(s.replace(',', '.')) for s in text.split()]
-    except ValueError:
-        await update.message.reply_text(
-            {
-                'ru': "Пожалуйста, введи корректное число или числа.",
-                'en': "Please enter a valid number or numbers.",
-                'tr': "Lütfen geçerli bir sayı veya sayılar girin."
-            }[lang]
-        )
-        return
-
-    choice = user_choice_data[user_id]
-    results = []
-    for num in sums:
-        if lang == 'ru':
-            if 'депозит' in choice:
-                sums2 = num * 0.10
-                sums3 = sums2 * 15
-            elif 'крипто' in choice or 'бай' in choice:
-                sums2 = num * 0.20
-                sums3 = sums2 * 20
-            else:
-                sums2 = 0
-                sums3 = 0
-        elif lang == 'en':
-            if 'deposit' in choice:
-                sums2 = num * 0.10
-                sums3 = sums2 * 15
-            elif 'crypto' in choice or 'buy' in choice:
-                sums2 = num * 0.20
-                sums3 = sums2 * 20
-            else:
-                sums2 = 0
-                sums3 = 0
-        elif lang == 'tr':
-            if 'depozito' in choice:
-                sums2 = num * 0.10
-                sums3 = sums2 * 15
-            elif 'kripto' in choice or 'bay' in choice:
-                sums2 = num * 0.20
-                sums3 = sums2 * 20
-            else:
-                sums2 = 0
-                sums3 = 0
-
-        slots = sums3 + num
-        roulette = sums3 * 3.33 + num
-        blackjack = sums3 * 5 + num
-        crash = sums3 * 10 + num
-
-        result_text = {
-            'ru': f"Ваша сумма: {format_number(num)}\nСлоты: {format_number(slots)}\nРулетка: {format_number(roulette)}\nБлэкджек: {format_number(blackjack)}\nCrash/Live/Table: {format_number(crash)}",
-            'en': f"Your amount: {format_number(num)}\nSlots: {format_number(slots)}\nRoulette: {format_number(roulette)}\nBlackjack: {format_number(blackjack)}\nCrash/Live/Table: {format_number(crash)}",
-            'tr': f"Tutarınız: {format_number(num)}\nSlotlar: {format_number(slots)}\nRulet: {format_number(roulette)}\nBlackjack: {format_number(blackjack)}\nCrash/Live/Masa: {format_number(crash)}",
-        }[lang]
-        results.append(result_text)
-
-        # Подсчёт количества расчётов для пользователя
-        user_count_calc[user_id] += 1
-
-    await update.message.reply_text("\n\n".join(results))
-
-    # Отправка сообщения с предупреждением
-    spam_on = user_spam_status.get(user_id, True)
-    count = user_count_calc.get(user_id, 0)
-
-    if spam_on:
-        await update.message.reply_text({
-            'ru': "Обязательно проверяйте свои итоговые суммы! Это для вашей же страховки, если же вы хотите, чтобы это сообщение не показывалось напишите stopspam",
-            'en': "Be sure to check your final amounts! This is for your own insurance; if you want to disable this message, type stopspam",
-            'tr': "Son tutarları mutlaka kontrol edin! Bu sizin için bir sigorta; bu mesajın gösterilmemesini istiyorsanız stopspam yazın."
-        }[lang])
+async def lang_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text.lower()
+    if 'рус' in text:
+        context.user_data['lang'] = 'ru'
+    elif 'eng' in text:
+        context.user_data['lang'] = 'en'
+    elif 'türk' in text or 'turk' in text:
+        context.user_data['lang'] = 'tr'
     else:
-        # каждые 7 расчётов присылаем укороченное сообщение
-        if count % 7 == 0:
-            await update.message.reply_text({
-                'ru': "Обязательно проверяйте свои итоговые суммы! Это для вашей же страховки",
-                'en': "Be sure to check your final amounts! This is for your own insurance",
-                'tr': "Son tutarları mutlaka kontrol edin! Bu sizin için bir sigorta"
-            }[lang])
+        # Неизвестный язык
+        await update.message.reply_text("Пожалуйста, выберите язык из списка.")
+        return LANG
+
+    await update.message.reply_text(TEXTS[context.user_data['lang']]['ask_password'])
+    return PASSWORD
+
+async def password_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.message.text.strip() == PASSWORD_CORRECT:
+        await update.message.reply_text(TEXTS[context.user_data['lang']]['choose_bonus'])
+        return BONUS_TYPE
+    else:
+        await update.message.reply_text(TEXTS[context.user_data['lang']]['wrong_password'])
+        return PASSWORD
+
+async def bonus_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    choice = update.message.text.strip()
+    if choice not in BONUS_PERCENT:
+        await update.message.reply_text(TEXTS[context.user_data['lang']]['choose_bonus'])
+        return BONUS_TYPE
+    context.user_data['bonus_percent'] = BONUS_PERCENT[choice]
+    await update.message.reply_text(TEXTS[context.user_data['lang']]['ask_sum'])
+    # Инициализируем счетчик спам-сообщений и флаг
+    context.user_data.setdefault('spam_counter', 0)
+    context.user_data.setdefault('stop_spam', False)
+    return SUMS_INPUT
+
+async def sums_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    lang = context.user_data.get('lang', 'ru')
+    text = update.message.text.strip()
+    parts = text.split()
+    numbers = []
+    for part in parts:
+        try:
+            n = int(part.replace(' ', ''))
+            if n > 0:
+                numbers.append(n)
+        except:
+            pass
+    if not numbers:
+        await update.message.reply_text(TEXTS[lang]['invalid_sum'])
+        return SUMS_INPUT
+
+    total = sum(numbers)
+    bonus_percent = context.user_data.get('bonus_percent', 0.10)
+
+    sums2 = total * bonus_percent
+    sums3 = sums2 * 15
+    slots = sums3 + total
+    roulette = sums3 * 3.33 + total
+    blackjack = sums3 * 5 + total
+    crash = sums3 * 10 + total
+
+    message = get_bets_text(lang, int(slots), int(roulette), int(blackjack), int(crash))
+
+    # Спам-сообщения
+    spam_counter = context.user_data.get('spam_counter', 0) + 1
+    context.user_data['spam_counter'] = spam_counter
+    stop_spam = context.user_data.get('stop_spam', False)
+
+    await update.message.reply_text(message)
+
+    if not stop_spam or (spam_counter % 7 == 0):
+        await update.message.reply_text(TEXTS[lang]['spam_message'])
+
+    return SUMS_INPUT
+
+async def stopspam(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    lang = context.user_data.get('lang', 'ru')
+    context.user_data['stop_spam'] = True
+    await update.message.reply_text(TEXTS[lang]['stopspam_enabled'])
+
+async def spam(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    lang = context.user_data.get('lang', 'ru')
+    context.user_data['stop_spam'] = False
+    await update.message.reply_text(TEXTS[lang]['stopspam_disabled'])
+
+async def lang_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Выберите язык / Choose language / Dil seçin:")
+    return LANG
+
+async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Выход из диалога.")
+    return ConversationHandler.END
+
+def main():
+    TOKEN = "TELEGRAM_TOKEN"  # <-- Вставь сюда токен
+    app = ApplicationBuilder().token(TOKEN).build()
+
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler('start', start), CommandHandler('lang', lang_command)],
+        states={
+            LANG: [MessageHandler(filters.TEXT & ~filters.COMMAND, lang_choice)],
+            PASSWORD: [MessageHandler(filters.TEXT & ~filters.COMMAND, password_check)],
+            BONUS_TYPE: [MessageHandler(filters.TEXT & ~filters.COMMAND, bonus_choice)],
+            SUMS_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, sums_input)],
+        },
+        fallbacks=[CommandHandler('cancel', cancel)],
+        allow_reentry=True,
+    )
+
+    app.add_handler(conv_handler)
+    app.add_handler(CommandHandler("stopspam", stopspam))
+    app.add_handler(CommandHandler("spam", spam))
+
+    app.run_polling()
 
 if __name__ == '__main__':
-    TOKEN = os.getenv("TELEGRAM_TOKEN")
-    application = ApplicationBuilder().token(TOKEN).build()
-
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("lang", change_language))
-    application.add_handler(CommandHandler("status", status))
-    application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
-
-    application.run_polling()
-        
+    main()
+    
