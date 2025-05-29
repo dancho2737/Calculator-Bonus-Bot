@@ -2,13 +2,14 @@ from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 import os
 import math
+import sys
 
 user_choice_data = {}
 user_active_status = {}
 user_spam_status = {}
 user_count_calc = {}
 user_authenticated = {}
-user_language = {}  # словарь для хранения выбранного языка пользователя
+user_language = {}
 user_waiting_for_password = set()
 user_waiting_for_language = set()
 
@@ -228,7 +229,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     results = []
     for num in sums:
         if lang == 'ru':
-            # Варианты бонусов на русском
             if 'депозит' in choice:
                 sums2 = num * 0.10
                 sums3 = sums2 * 15
@@ -238,89 +238,32 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 sums2 = sums3 = 0
         else:
-            # Английский / турецкий варианты (сравниваем на английском)
             choice_en = choice.lower()
             if 'deposit' in choice_en or 'депозит' in choice_en:
                 sums2 = num * 0.10
                 sums3 = sums2 * 15
-            elif 'crypto' in choice_en or 'buy' in choice_en or 'kripto' in choice_en or 'bay' in choice_en:
+            elif 'crypto' in choice_en or 'buy' in choice_en or 'крипто' in choice_en or 'бай' in choice_en:
                 sums2 = num * 0.20
                 sums3 = sums2 * 20
             else:
                 sums2 = sums3 = 0
 
-        slots = sums3 + num
-        roulette = sums3 * 3.33 + num
-        blackjack = sums3 * 5 + num
-        crash = sums3 * 10 + num
+        res_text = f"{format_number(num)} -> {format_number(sums2)} -> {format_number(sums3)}"
+        results.append(res_text)
 
-        if lang == 'ru':
-            result_text = (
-                f"Сумма: {format_number(num)} сомов\n"
-                f"🔹 Слоты (100%) — отыграть {format_number(slots)} сомов\n"
-                f"🔹 Roulette (30%) — отыграть {format_number(roulette)} сомов\n"
-                f"🔹 Blackjack (20%) — отыграть {format_number(blackjack)} сомов\n"
-                f"🔹 Остальные настольные, crash игры и лайв-казино игры (10%) — отыграть {format_number(crash)} сомов"
-            )
-        elif lang == 'en':
-            result_text = (
-                f"Amount: {format_number(num)} soms\n"
-                f"🔹 Slots (100%) — wager {format_number(slots)} soms\n"
-                f"🔹 Roulette (30%) — wager {format_number(roulette)} soms\n"
-                f"🔹 Blackjack (20%) — wager {format_number(blackjack)} soms\n"
-                f"🔹 Other table games, crash games and live casino (10%) — wager {format_number(crash)} soms"
-            )
-        else:  # турецкий
-            result_text = (
-                f"Tutar: {format_number(num)} som\n"
-                f"🔹 Slotlar (100%) — oynanması gereken {format_number(slots)} som\n"
-                f"🔹 Rulet (30%) — oynanması gereken {format_number(roulette)} som\n"
-                f"🔹 Blackjack (20%) — oynanması gereken {format_number(blackjack)} som\n"
-                f"🔹 Diğer masa oyunları, crash oyunları ve canlı casino (10%) — oynanması gereken {format_number(crash)} som"
-            )
+    await update.message.reply_text("\n".join(results))
 
-        results.append(result_text)
+if __name__ == '__main__':
+    TOKEN = os.getenv("BOT_TOKEN")
+    if not TOKEN:
+        print("Ошибка: Не задан токен бота. Установите переменную окружения BOT_TOKEN.")
+        sys.exit(1)
 
-    intro_text = {
-        'ru': "Для выполнения условий отыгрыша с вашими суммами бонуса потребуется сделать следующие объёмы ставок в разных играх:\n",
-        'en': "To meet the wagering requirements for your bonus amounts, you will need to place the following bets in different games:\n",
-        'tr': "Bonus tutarları için çevrim şartlarını karşılamak amacıyla farklı oyunlarda yapılması gereken bahis miktarları:\n"
-    }
+    application = ApplicationBuilder().token(TOKEN).build()
 
-    result_text = intro_text[lang] + "\n\n".join(results)
-    await update.message.reply_text(result_text)
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("status", status))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    user_count_calc[user_id] = user_count_calc.get(user_id, 0) + 1
-    count = user_count_calc[user_id]
-
-    if user_spam_status.get(user_id, True):
-        await update.message.reply_text(
-            {
-                'ru': "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки. Если же хотите чтобы это сообщение больше не появлялось, то напишите stopspam",
-                'en': "Make sure to double-check the final amounts! This is for your own protection. If you want to stop seeing this message, type stopspam.",
-                'tr': "Lütfen son tutarları mutlaka kontrol edin! Bu sizin güvenliğiniz için. Bu mesajı görmek istemiyorsanız stopspam yazabilirsiniz."
-            }[lang]
-        )
-    else:
-        if count % 10 == 0:
-            await update.message.reply_text(
-                {
-                    'ru': "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки.",
-                    'en': "Make sure to double-check the final amounts! This is for your own protection.",
-                    'tr': "Lütfen son tutarları mutlaka kontrol edin! Bu sizin güvenliğiniz için."
-                }[lang]
-            )
-
-
-if __name__ == "__main__":
-    TOKEN = os.getenv("TOKEN") or "YOUR_TELEGRAM_BOT_TOKEN"
-
-    app = ApplicationBuilder().token(TOKEN).build()
-
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("status", status))
-    app.add_handler(CommandHandler("lang", change_language))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
-    print("Bot started")
-    app.run_polling()
+    print("Бот запущен...")
+    application.run_polling()
