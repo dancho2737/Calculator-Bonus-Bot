@@ -228,24 +228,38 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     choice = user_choice_data[user_id]
     results = []
     for num in sums:
-        # Общий расчёт для всех языков одинаковый
-        choice_lower = choice.lower()
-
-        if 'депозит' in choice_lower or 'deposit' in choice_lower or 'depozito' in choice_lower:
-            sums2 = num * 0.10
-            sums3 = sums2 * 15
-        elif ('крипто' in choice_lower or 'crypto' in choice_lower
-              or 'бай' in choice_lower or 'buy' in choice_lower
-              or 'kripto' in choice_lower or 'bay' in choice_lower):
-            sums2 = num * 0.20
-            sums3 = sums2 * 20
+        if lang == 'ru':
+            # Варианты бонусов на русском
+            if 'депозит' in choice:
+                sums2 = num * 0.10
+                sums3 = sums2 * 15
+            elif 'крипто' in choice or 'бай' in choice:
+                sums2 = num * 0.20
+                sums3 = sums2 * 20
+            else:
+                sums2 = sums3 = 0
         else:
-            sums2 = sums3 = 0
+            # Английский / турецкий варианты (сравниваем на английском)
+            choice_en = choice.lower()
+            if 'deposit' in choice_en or 'депозит' in choice_en:
+                sums2 = num * 0.10
+                sums3 = sums2 * 15
+            elif 'crypto' in choice_en or 'buy' in choice_en or 'kripto' in choice_en or 'bay' in choice_en:
+                sums2 = num * 0.20
+                sums3 = sums2 * 20
+            else:
+                sums2 = sums3 = 0
 
         slots = sums3 + num
         roulette = sums3 * 3.33 + num
         blackjack = sums3 * 5 + num
         crash = sums3 * 10 + num
+
+        intro_text = {
+            'ru': "Для выполнения условий отыгрыша с вашими суммами бонуса потребуется сделать следующие объёмы ставок в разных играх:\n",
+            'en': "To meet the wagering requirements for your bonus amounts, you will need to place the following bets in different games:\n",
+            'tr': "Bonus tutarları için çevrim şartlarını karşılamak amacıyla farklı oyunlarda yapılması gereken bahis miktarları:\n"
+        }
 
         if lang == 'ru':
             result_text = (
@@ -263,7 +277,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"🔹 Blackjack (20%) — wager {format_number(blackjack)} soms\n"
                 f"🔹 Other table games, crash games and live casino (10%) — wager {format_number(crash)} soms"
             )
-        else:  # tr
+        else:  # турецкий
             result_text = (
                 f"Tutar: {format_number(num)} som\n"
                 f"🔹 Slotlar (100%) — oynanması gereken {format_number(slots)} som\n"
@@ -271,21 +285,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"🔹 Blackjack (20%) — oynanması gereken {format_number(blackjack)} som\n"
                 f"🔹 Diğer masa oyunları, crash oyunları ve canlı casino (10%) — oynanması gereken {format_number(crash)} som"
             )
-
         results.append(result_text)
 
-    user_count_calc[user_id] += 1
-    if user_spam_status.get(user_id, True) or user_count_calc[user_id] % 10 == 0:
-        await update.message.reply_text("\n\n".join(results))
+    full_result = intro_text[lang] + "\n\n".join(results)
+    await update.message.reply_text(full_result)
 
 if __name__ == '__main__':
-    TOKEN = os.environ.get("TOKEN")
-    app = ApplicationBuilder().token(TOKEN).build()
+    token = os.getenv("TOKEN")
+    app = ApplicationBuilder().token(token).build()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("status", status))
     app.add_handler(CommandHandler("lang", change_language))
-    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    print("Bot started")
+    print("Bot started...")
     app.run_polling()
