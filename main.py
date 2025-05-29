@@ -182,12 +182,12 @@ async def amount_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Формируем сообщение
     lines = []
     for res in results:
-    lines.append(messages[data['lang']]['results'].format(
-        slots=format_number(res['slots']),
-        roulette=format_number(res['roulette']),
-        blackjack=format_number(res['blackjack']),
-        crash=format_number(res['crash'])
-    ))                                                                                                                                      crash=format_number(res['crash']))}")
+        lines.append(messages[data['lang']]['results'].format(
+            slots=format_number(res['slots']),
+            roulette=format_number(res['roulette']),
+            blackjack=format_number(res['blackjack']),
+            crash=format_number(res['crash'])
+        ))
     message = "\n".join(lines)
     await update.message.reply_text(message)
 
@@ -195,14 +195,11 @@ async def amount_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not data['stopspam']:
         data['count'] += 1
         # Каждое сообщение после подсчёта + каждые 7 подсчётов напоминание
-        if data['count'] % 7 == 0:
-            await update.message.reply_text(messages[data['lang']]['check_sums_reminder'])
-        else:
-            await update.message.reply_text(messages[data['lang']]['check_sums_reminder'])
+        await update.message.reply_text(messages[data['lang']]['check_sums_reminder'])
 
     return BONUS
 
-async def stopspam(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def stopspam_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     data = get_user_data(user_id)
     data['stopspam'] = not data['stopspam']
@@ -211,22 +208,13 @@ async def stopspam(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text(messages[data['lang']]['stopspam_disabled'])
 
-async def lang_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     data = get_user_data(user_id)
-    await update.message.reply_text(messages[data['lang']]['choose_lang'])
-    return LANG
-
-async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Выход из диалога.")
-    return ConversationHandler.END
-
+    await update.message.reply_text(messages[data['lang']]['stopspam_prompt'])
 
 def main():
-    TOKEN = os.getenv("TELEGRAM_TOKEN")
-    if not TOKEN:
-        raise ValueError("TELEGRAM_TOKEN is not set in environment variables")
-
+    TOKEN = os.getenv("TELEGRAM_TOKEN")  # Ваш токен бота
     app = ApplicationBuilder().token(TOKEN).build()
 
     conv_handler = ConversationHandler(
@@ -237,17 +225,16 @@ def main():
             BONUS: [MessageHandler(filters.TEXT & ~filters.COMMAND, bonus_choice)],
             AMOUNT: [MessageHandler(filters.TEXT & ~filters.COMMAND, amount_handler)],
         },
-        fallbacks=[CommandHandler('cancel', cancel)]
+        fallbacks=[CommandHandler('stopspam', stopspam_command)]
     )
 
     app.add_handler(conv_handler)
-    app.add_handler(CommandHandler('stopspam', stopspam))
-    app.add_handler(CommandHandler('lang', lang_command))
+    app.add_handler(CommandHandler('stopspam', stopspam_command))
+    app.add_handler(MessageHandler(filters.COMMAND, unknown_command))
 
     print("Bot started")
     app.run_polling()
 
-
 if __name__ == '__main__':
     main()
-    
+        
