@@ -183,9 +183,12 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 def main():
-    TOKEN = "TELEGRAM_TOKEN"  # <-- Вставь сюда токен
-    app = ApplicationBuilder().token(TOKEN).build()
+    TOKEN = os.getenv("TELEGRAM_TOKEN")
+    if not TOKEN:
+        raise ValueError("TELEGRAM_TOKEN is not set in environment variables.")
 
+    app = ApplicationBuilder().token(TOKEN).build()
+    
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start), CommandHandler('lang', lang_command)],
         states={
