@@ -8,13 +8,12 @@ user_active_status = {}
 user_spam_status = {}
 user_count_calc = {}
 user_authenticated = {}
-user_language = {}  # словарь для хранения выбранного языка пользователя
+user_language = {}
 user_waiting_for_password = set()
 user_waiting_for_language = set()
 
 PASSWORD = "starzbot"
 
-# Клавиатура бонусов для каждого языка
 keyboards = {
     'ru': [['Крипто/Бай бонус 20'], ['Депозит бонус 10']],
     'en': [['Crypto/Buy Bonus 20'], ['Deposit Bonus 10']],
@@ -44,7 +43,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_choice_data.pop(user_id, None)
     user_count_calc[user_id] = 0
     user_spam_status[user_id] = True
-    # УБРАЛИ ЭТУ СТРОКУ: user_waiting_for_password.add(user_id)
+    # Убираем ожидание пароля сразу при старте
+    if user_id in user_waiting_for_password:
+        user_waiting_for_password.remove(user_id)
+    if user_id in user_waiting_for_language:
+        user_waiting_for_language.remove(user_id)
 
     await update.message.reply_text(
         "Выберите язык / Please choose a language / Lütfen bir dil seçin:",
@@ -89,7 +92,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     text = update.message.text.strip()
 
-    # Проверяем выбор языка, если ждем
+    # Сначала обработать выбор языка (если ждем)
     if user_id in user_waiting_for_language:
         chosen_lang = None
         if text.lower() in ['русский', 'ru', 'russian']:
@@ -102,7 +105,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if chosen_lang:
             user_language[user_id] = chosen_lang
             user_waiting_for_language.remove(user_id)
-            user_waiting_for_password.add(user_id)  # добавляем ожидание пароля именно здесь
+            user_waiting_for_password.add(user_id)  # теперь ждем пароль
             texts = {
                 'ru': "Язык выбран: Русский.\nТеперь введите пароль:",
                 'en': "Language set to English.\nPlease enter the password:",
@@ -116,7 +119,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         return
 
-    # Проверка пароля, если ждем пароль
+    # ВАЖНО: Проверка пароля идёт раньше, чем проверка аутентификации
     if user_id in user_waiting_for_password:
         if text == PASSWORD:
             user_authenticated[user_id] = True
@@ -146,11 +149,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     lang = user_language.get(user_id, 'ru')
 
-    # Обработка команды /lang
-    if text.lower() == '/lang':
-        await change_language(update, context)
-        return
-
+    # Проверяем аутентификацию, если не аутентифицирован - просим начать сначала
     if not user_authenticated.get(user_id):
         await update.message.reply_text(
             {
@@ -164,7 +163,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not user_active_status.get(user_id, True):
         return
 
-    # Обработка команд стоп
+    if text.lower() == '/lang':
+        await change_language(update, context)
+        return
+
     if text.lower() == "stop":
         user_active_status[user_id] = False
         await update.message.reply_text(
@@ -187,7 +189,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    # Проверка выбора бонуса
     bonuses_lower = [b[0].lower() for b in keyboards[lang]]
     if text.lower() in bonuses_lower:
         user_choice_data[user_id] = text.lower()
@@ -211,7 +212,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    # Обработка числового ввода суммы
     try:
         sums = [float(s.replace(',', '.')) for s in text.split()]
     except ValueError:
@@ -228,7 +228,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     results = []
     for num in sums:
         if lang == 'ru':
-            # Варианты бонусов на русском
             if 'депозит' in choice:
                 sums2 = num * 0.10
                 sums3 = sums2 * 15
@@ -238,7 +237,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 sums2 = sums3 = 0
         else:
-            # Английский / турецкий варианты (сравниваем на английском)
             choice_en = choice.lower()
             if 'deposit' in choice_en or 'депозит' in choice_en:
                 sums2 = num * 0.10
