@@ -44,7 +44,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_choice_data.pop(user_id, None)
     user_count_calc[user_id] = 0
     user_spam_status[user_id] = True
-    user_waiting_for_password.add(user_id)
+    user_waiting_for_password.discard(user_id)
+    user_waiting_for_language.add(user_id)
 
     await update.message.reply_text(
         "Выберите язык / Please choose a language / Lütfen bir dil seçin:",
@@ -111,7 +112,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(texts[chosen_lang], reply_markup=ReplyKeyboardRemove())
         else:
             await update.message.reply_text(
-ext(
                 "Неверный выбор языка. Пожалуйста, выберите из кнопок.",
                 reply_markup=language_keyboard
             )
@@ -221,7 +221,7 @@ ext(
                 'ru': "Пожалуйста, введи корректное число или числа.",
                 'en': "Please enter a valid number or numbers.",
                 'tr': "Lütfen geçerli bir sayı veya sayılar girin."
-}[lang]
+            }[lang]
         )
         return
 
@@ -307,22 +307,23 @@ ext(
             await update.message.reply_text(
                 {
                     'ru': "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки.",
-                    'en': "Make sure to
-double-check the final amounts! This is for your own protection.",
+                    'en': "Make sure to double-check the final amounts! This is for your own protection.",
                     'tr': "Lütfen son tutarları mutlaka kontrol edin! Bu sizin güvenliğiniz için."
                 }[lang]
             )
 
-
-if name == "__main__":
-    TOKEN = os.getenv("TOKEN") or "BOT_TOKEN"
+if __name__ == "__main__":
+    TOKEN = os.getenv("TOKEN")
+    if not TOKEN:
+        print("Ошибка: не задан токен в переменной окружения TOKEN")
+        exit(1)
 
     app = ApplicationBuilder().token(TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("status", status))
     app.add_handler(CommandHandler("lang", change_language))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
 
-    print("Bot started")
+    print("Бот запущен")
     app.run_polling()
