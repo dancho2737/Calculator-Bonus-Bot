@@ -9,13 +9,11 @@ user_spam_status = {}
 user_count_calc = {}
 user_authenticated = {}
 user_language = {}
-user_awaiting_password = {}
 
 PASSWORD = "starzbot"
 
 translations = {
     'ru': {
-        'choose_language': "Выберите язык:",
         'enter_password': "Введите пароль для доступа к боту:",
         'access_granted': "Доступ разрешён! Выбери бонус и введи сумму:",
         'bot_activated': "Бот активирован. Выбери бонус для расчёта и введи сумму:",
@@ -36,7 +34,6 @@ translations = {
         'wager_intro_plural': "Для выполнения условий отыгрыша с вашими суммами бонуса потребуется сделать следующие объёмы ставок в разных играх:\n"
     },
     'en': {
-        'choose_language': "Choose your language:",
         'enter_password': "Enter password to access the bot:",
         'access_granted': "Access granted! Choose a bonus and enter the amount:",
         'bot_activated': "Bot activated. Choose a bonus and enter the amount:",
@@ -57,7 +54,6 @@ translations = {
         'wager_intro_plural': "To meet the wagering conditions, you need to:\n"
     },
     'tr': {
-        'choose_language': "Dil seçin:",
         'enter_password': "Bota erişim için şifreyi girin:",
         'access_granted': "Erişim verildi! Bir bonus seç ve miktarı gir:",
         'bot_activated': "Bot aktif edildi. Bir bonus seç ve miktarı gir:",
@@ -80,7 +76,8 @@ translations = {
 }
 
 def format_number(n):
-    return f"{math.ceil(n):,}".replace(",", " ")
+    n_ceil = math.ceil(n)
+    return f"{n_ceil:,}".replace(",", " ")
 
 async def send_bonus_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -90,57 +87,77 @@ async def send_bonus_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [translations[lang]['bonus_deposit']]
     ]
     markup_bonus = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
-    await update.message.reply_text(translations[lang]['choose_bonus'], reply_markup=markup_bonus)
+    await update.message.reply_text(
+        translations[lang]['choose_bonus'],
+        reply_markup=markup_bonus
+    )
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
+    # При старте всегда сначала выбираем язык
+    await language(update, context)
+    # Сбрасываем состояние аутентификации, чтобы вводить пароль заново
+    user_authenticated[user_id] = False
+
+async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    if not user_authenticated.get(user_id):
+        lang = user_language.get(user_id, 'ru')
+        await update.message.reply_text(translations[lang]['enter_password'])
+        return
+
+    is_active = user_active_status.get(user_id, True)
+    lang = user_language.get(user_id, 'ru')
+    await update.message.reply_text(
+        translations[lang]['bot_active'] if is_active else translations[lang]['bot_stopped']
+    )
+
+async def language(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_keyboard = [['Русский', 'English', 'Türkçe']]
-    markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
-    await update.message.reply_text("Выберите язык / Choose language / Dil seçin:", reply_markup=markup)
+    markup_lang = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
+    await update.message.reply_text("Choose your language / Язык / Dil seçin:", reply_markup=markup_lang)
 
 async def language_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    text = update.message.text
+    selected_lang = update.message.text
 
-    if text == 'Русский':
-        lang = 'ru'
-    elif text == 'English':
-        lang = 'en'
-    elif text == 'Türkçe':
-        lang = 'tr'
+    if selected_lang == 'Русский':
+        user_language[user_id] = 'ru'
+    elif selected_lang == 'English':
+        user_language[user_id] = 'en'
+    elif selected_lang == 'Türkçe':
+        user_language[user_id] = 'tr'
     else:
         await update.message.reply_text("Invalid language selection.")
         return
 
-    user_language[user_id] = lang
-    user_awaiting_password[user_id] = True
-    await update.message.reply_text(translations[lang]['enter_password'])
+    # После выбора языка — просим ввести пароль на этом языке
+    await update.message.reply_text(translations[user_language[user_id]]['enter_password'])
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     text = update.message.text.strip()
+
     lang = user_language.get(user_id, 'ru')
 
-    if user_awaiting_password.get(user_id):
+    # Если не аутентифицирован — проверяем пароль
+    if not user_authenticated.get(user_id):
         if text == PASSWORD:
             user_authenticated[user_id] = True
             user_active_status[user_id] = True
             user_spam_status[user_id] = True
             user_count_calc[user_id] = 0
-            user_awaiting_password[user_id] = False
             await update.message.reply_text(translations[lang]['access_granted'])
             await send_bonus_menu(update, context)
         else:
             await update.message.reply_text(translations[lang]['wrong_password'])
         return
 
-    if not user_authenticated.get(user_id):
-        await update.message.reply_text(translations[lang]['enter_password'])
-        return
-
+    # Проверка состояния бота
     if not user_active_status.get(user_id, True):
         return
 
+    # Обработка команд stop и stopspam
     if text.lower() == "stop":
         user_active_status[user_id] = False
         await update.message.reply_text(translations[lang]['stop_message'])
@@ -207,7 +224,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
 
         intro = translations[lang]['wager_intro_plural'] if is_plural else translations[lang]['wager_intro_single']
-        await update.message.reply_text(intro + "\n\n".join(results))
+        result_text = intro + "\n\n".join(results)
+        await update.message.reply_text(result_text)
 
         user_count_calc[user_id] = user_count_calc.get(user_id, 0) + 1
         count = user_count_calc[user_id]
@@ -222,12 +240,3 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await send_bonus_menu(update, context)
 
 if __name__ == '__main__':
-    app = ApplicationBuilder().token(os.environ.get("BOT_TOKEN")).build()
-
-    app.add_handler(CommandHandler('start', start))
-    app.add_handler(CommandHandler('status', status))
-    app.add_handler(CommandHandler('language', start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, language_selection))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
-    app.run_polling()
