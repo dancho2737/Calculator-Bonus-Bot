@@ -1,7 +1,7 @@
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
-import os
 import math
+import os
 
 user_choice_data = {}
 user_active_status = {}
@@ -239,4 +239,16 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(translations[lang]['choose_bonus_button'])
         await send_bonus_menu(update, context)
 
+
 if __name__ == '__main__':
+    TOKEN = os.getenv('BOT_TOKEN')  # Или впиши токен прямо сюда
+
+    app = ApplicationBuilder().token(TOKEN).build()
+
+    app.add_handler(CommandHandler('start', start))
+    app.add_handler(CommandHandler('status', status))
+    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), language_selection), group=0)  # Сначала выбираем язык
+    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message), group=1)  # Потом всё остальное
+
+    print("Бот запущен...")
+    app.run_polling()
