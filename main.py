@@ -55,6 +55,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def change_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_waiting_for_language.add(user_id)
+    user_authenticated[user_id] = False
+    user_active_status[user_id] = False
+    user_choice_data.pop(user_id, None)
+    user_count_calc[user_id] = 0
+    user_spam_status[user_id] = True
+    user_waiting_for_password.discard(user_id)
+
     await update.message.reply_text(
         "Пожалуйста, выберите язык:\nPlease choose language:\nLütfen bir dil seçin:",
         reply_markup=language_keyboard
@@ -147,9 +154,21 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     lang = user_language.get(user_id, 'ru')
 
-    # Обработка команды /lang
+    # Обработка команды /lang для смены языка
     if text.lower() == '/lang':
         await change_language(update, context)
+        return
+
+    # Отключение сообщений spam с помощью команды stopspam
+    if text.lower() == "stopspam":
+        user_spam_status[user_id] = False
+        await update.message.reply_text(
+            {
+                'ru': "Предупреждения отключены. Сообщения больше не будут показываться, кроме каждых 7 подсчётов.",
+                'en': "Warnings disabled. Messages will no longer be shown except every 7 calculations.",
+                'tr': "Uyarılar kapatıldı. Mesajlar sadece her 7 hesaplamada bir gösterilecektir."
+            }[lang]
+        )
         return
 
     if not user_authenticated.get(user_id):
@@ -165,7 +184,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not user_active_status.get(user_id, True):
         return
 
-    # Обработка команд стоп
+    # Обработка команды стоп
     if text.lower() == "stop":
         user_active_status[user_id] = False
         await update.message.reply_text(
@@ -173,17 +192,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 'ru': "Бот остановлен. Чтобы запустить снова, напиши /start.",
                 'en': "Bot stopped. To start again, type /start.",
                 'tr': "Bot durduruldu. Yeniden başlatmak için /start yazın."
-            }[lang]
-        )
-        return
-
-    if text.lower() == "stopspam":
-        user_spam_status[user_id] = False
-        await update.message.reply_text(
-            {
-                'ru': "Предупреждения больше показываться не будут, кроме каждых 10 подсчётов.",
-                'en': "Warnings will no longer be shown, except every 10 calculations.",
-                'tr': "Uyarılar artık gösterilmeyecek, sadece her 10 hesaplamada bir."
             }[lang]
         )
         return
@@ -219,9 +227,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             {
                 'ru': "Пожалуйста, введи корректное число или числа.",
-                'en': "Please ent
-
-er a valid number or numbers.",
+                'en': "Please enter a valid number or numbers.",
                 'tr': "Lütfen geçerli bir sayı veya sayılar girin."
             }[lang]
         )
@@ -231,7 +237,6 @@ er a valid number or numbers.",
     results = []
     for num in sums:
         if lang == 'ru':
-            # Варианты бонусов на русском
             if 'депозит' in choice:
                 sums2 = num * 0.10
                 sums3 = sums2 * 15
@@ -239,94 +244,73 @@ er a valid number or numbers.",
                 sums2 = num * 0.20
                 sums3 = sums2 * 20
             else:
-                sums2 = sums3 = 0
-        else:
-            # Английский / турецкий варианты (сравниваем на английском)
-            choice_en = choice.lower()
-            if 'deposit' in choice_en or 'депозит' in choice_en:
+                sums2 = 0
+                sums3 = 0
+        elif lang == 'en':
+            if 'deposit' in choice:
                 sums2 = num * 0.10
                 sums3 = sums2 * 15
-            elif 'crypto' in choice_en or 'buy' in choice_en or 'kripto' in choice_en or 'bay' in choice_en:
+            elif 'crypto' in choice or 'buy' in choice:
                 sums2 = num * 0.20
                 sums3 = sums2 * 20
             else:
-                sums2 = sums3 = 0
+                sums2 = 0
+                sums3 = 0
+        elif lang == 'tr':
+            if 'depozito' in choice:
+                sums2 = num * 0.10
+                sums3 = sums2 * 15
+            elif 'kripto' in choice or 'bay' in choice:
+                sums2 = num * 0.20
+                sums3 = sums2 * 20
+            else:
+                sums2 = 0
+                sums3 = 0
+
         slots = sums3 + num
         roulette = sums3 * 3.33 + num
         blackjack = sums3 * 5 + num
         crash = sums3 * 10 + num
 
-        if lang == 'ru':
-            result_text = (
-                f"Сумма: {format_number(num)} сомов\n"
-                f"🔹 Слоты (100%) — отыграть {format_number(slots)} сомов\n"
-                f"🔹 Roulette (30%) — отыграть {format_number(roulette)} сомов\n"
-                f"🔹 Blackjack (20%) — отыграть {format_number(blackjack)} сомов\n"
-                f"🔹 Остальные настольные, crash игры и лайв-казино игры (10%) — отыграть {format_number(crash)} сомов"
-            )
-        elif lang == 'en':
-            result_text = (
-                f"Amount: {format_number(num)} soms\n"
-                f"🔹 Slots (100%) — wager {format_number(slots)} soms\n"
-                f"🔹 Roulette (30%) — wager {format_number(roulette)} soms\n"
-                f"🔹 Blackjack (20%) — wager {format_number(blackjack)} soms\n"
-                f"🔹 Other table games, crash games and live casino (10%) — wager {format_number(crash)} soms"
-            )
-        else:  # турецкий
-            result_text = (
-                f"Tutar: {format_number(num)} som\n"
-                f"🔹 Slotlar (100%) — oynanması gereken {format_number(slots)} som\n"
-                f"🔹 Rulet (30%) — oynanması gereken {format_number(roulette)} som\n"
-                f"🔹 Blackjack (20%) — oynanması gereken {format_number(blackjack)} som\n"
-                f"🔹 Diğer masa oyunları, crash oyunları ve canlı casino (10%) — oynanması gereken {format_number(crash)} som"
-            )
-
+        result_text = {
+            'ru': f"Ваша сумма: {format_number(num)}\nСлоты: {format_number(slots)}\nРулетка: {format_number(roulette)}\nБлэкджек: {format_number(blackjack)}\nCrash/Live/Table: {format_number(crash)}",
+            'en': f"Your amount: {format_number(num)}\nSlots: {format_number(slots)}\nRoulette: {format_number(roulette)}\nBlackjack: {format_number(blackjack)}\nCrash/Live/Table: {format_number(crash)}",
+            'tr': f"Tutarınız: {format_number(num)}\nSlotlar: {format_number(slots)}\nRulet: {format_number(roulette)}\nBlackjack: {format_number(blackjack)}\nCrash/Live/Masa: {format_number(crash)}",
+        }[lang]
         results.append(result_text)
 
-    intro_text = {
-        'ru': "Для выполнения условий отыгрыша с вашими суммами бонуса потребуется сделать следующие объёмы ставок в разных играх:\n",
-        'en': "To meet the wagering requirements for your bonus amounts, you will need to place the following bets in different games:\n",
-        'tr': "Bonus tutarları için çevrim şartlarını karşılamak amacıyla farklı oyunlarda yapılması gereken bahis miktarları:\n"
-    }
+        # Подсчёт количества расчётов для пользователя
+        user_count_calc[user_id] += 1
 
-    result_text = intro_text[lang] + "\n\n".join(results)
-    await update.message.reply_text(result_text)
+    await update.message.reply_text("\n\n".join(results))
 
-    user_count_calc[user_id] = user_count_calc.get(user_id, 0) + 1
-    count = user_count_calc[user_id]
+    # Отправка сообщения с предупреждением
+    spam_on = user_spam_status.get(user_id, True)
+    count = user_count_calc.get(user_id, 0)
 
-    if user_spam_status.get(user_id, True):
-        await update.message.reply_text(
-            {
-                'ru': "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки. Если же хотите чтобы это сообщение больше не появлялось, то напишите stopspam",
-                'en': "Make sure to double-check the final amounts! This is for your own protection. If you want to stop seeing this message, type stopspam.",
-                'tr': "Lütfen son tutarları mutlaka kontrol edin! Bu sizin güvenliğiniz için. Bu mesajı görmek istemiyorsanız stopspam yazabilirsiniz."
-            }[lang]
-        )
+    if spam_on:
+        await update.message.reply_text({
+            'ru': "Обязательно проверяйте свои итоговые суммы! Это для вашей же страховки, если же вы хотите, чтобы это сообщение не показывалось напишите stopspam",
+            'en': "Be sure to check your final amounts! This is for your own insurance; if you want to disable this message, type stopspam",
+            'tr': "Son tutarları mutlaka kontrol edin! Bu sizin için bir sigorta; bu mesajın gösterilmemesini istiyorsanız stopspam yazın."
+        }[lang])
     else:
-        if count % 10 == 0:
-            await update.message.reply_text(
-                {
-                    'ru':
+        # каждые 7 расчётов присылаем укороченное сообщение
+        if count % 7 == 0:
+            await update.message.reply_text({
+                'ru': "Обязательно проверяйте свои итоговые суммы! Это для вашей же страховки",
+                'en': "Be sure to check your final amounts! This is for your own insurance",
+                'tr': "Son tutarları mutlaka kontrol edin! Bu sizin için bir sigorta"
+            }[lang])
 
-"Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки.",
-                    'en': "Make sure to double-check the final amounts! This is for your own protection.",
-                    'tr': "Lütfen son tutarları mutlaka kontrol edin! Bu sizin güvenliğiniz için."
-                }[lang]
-            )
+if __name__ == '__main__':
+    TOKEN = os.getenv("TELEGRAM_TOKEN")
+    application = ApplicationBuilder().token(TOKEN).build()
 
-if name == "__main__":
-    TOKEN = os.getenv("BOT_TOKEN")
-    if not TOKEN:
-        print("Ошибка: не задан токен в переменной окружения TOKEN")
-        exit(1)
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("lang", change_language))
+    application.add_handler(CommandHandler("status", status))
+    application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
 
-    app = ApplicationBuilder().token(TOKEN).build()
-
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("status", status))
-    app.add_handler(CommandHandler("lang", change_language))
-    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
-
-    print("Бот запущен")
-    app.run_polling()
+    application.run_polling()
+        
