@@ -1,6 +1,6 @@
+import os
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters, ConversationHandler
-
 # Состояния для ConversationHandler
 LANG, PASSWORD, BONUS_TYPE, SUMS_INPUT = range(4)
 
