@@ -182,10 +182,12 @@ async def amount_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Формируем сообщение
     lines = []
     for res in results:
-        lines.append(f"{messages[data['lang']]['results'].format(slots=format_number(res['slots']),
-                                                                roulette=format_number(res['roulette']),
-                                                                blackjack=format_number(res['blackjack']),
-                                                                crash=format_number(res['crash']))}")
+    lines.append(messages[data['lang']]['results'].format(
+        slots=format_number(res['slots']),
+        roulette=format_number(res['roulette']),
+        blackjack=format_number(res['blackjack']),
+        crash=format_number(res['crash'])
+    ))                                                                                                                                      crash=format_number(res['crash']))}")
     message = "\n".join(lines)
     await update.message.reply_text(message)
 
