@@ -1,7 +1,7 @@
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
-import math
 import os
+import math
 
 user_choice_data = {}
 user_active_status = {}
@@ -94,32 +94,15 @@ async def send_bonus_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    # При старте всегда сначала выбираем язык
-    await language(update, context)
-    # Сбрасываем состояние аутентификации, чтобы вводить пароль заново
-    user_authenticated[user_id] = False
 
-async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    if not user_authenticated.get(user_id):
-        lang = user_language.get(user_id, 'ru')
-        await update.message.reply_text(translations[lang]['enter_password'])
-        return
-
-    is_active = user_active_status.get(user_id, True)
-    lang = user_language.get(user_id, 'ru')
-    await update.message.reply_text(
-        translations[lang]['bot_active'] if is_active else translations[lang]['bot_stopped']
-    )
-
-async def language(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # При старте предлагаем выбрать язык
     reply_keyboard = [['Русский', 'English', 'Türkçe']]
     markup_lang = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
     await update.message.reply_text("Choose your language / Язык / Dil seçin:", reply_markup=markup_lang)
 
 async def language_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    selected_lang = update.message.text
+    selected_lang = update.message.text.strip()
 
     if selected_lang == 'Русский':
         user_language[user_id] = 'ru'
@@ -131,33 +114,42 @@ async def language_selection(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await update.message.reply_text("Invalid language selection.")
         return
 
-    # После выбора языка — просим ввести пароль на этом языке
+    # После выбора языка отправляем сообщение с запросом пароля
     await update.message.reply_text(translations[user_language[user_id]]['enter_password'])
+
+async def password_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    text = update.message.text.strip()
+    lang = user_language.get(user_id, 'ru')
+
+    if user_authenticated.get(user_id, False):
+        # Уже аутентифицирован, игнорируем
+        return
+
+    if text == PASSWORD:
+        user_authenticated[user_id] = True
+        user_active_status[user_id] = True
+        user_spam_status[user_id] = True
+        user_count_calc[user_id] = 0
+        await update.message.reply_text(translations[lang]['access_granted'])
+        await send_bonus_menu(update, context)
+    else:
+        await update.message.reply_text(translations[lang]['wrong_password'])
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     text = update.message.text.strip()
-
     lang = user_language.get(user_id, 'ru')
 
-    # Если не аутентифицирован — проверяем пароль
-    if not user_authenticated.get(user_id):
-        if text == PASSWORD:
-            user_authenticated[user_id] = True
-            user_active_status[user_id] = True
-            user_spam_status[user_id] = True
-            user_count_calc[user_id] = 0
-            await update.message.reply_text(translations[lang]['access_granted'])
-            await send_bonus_menu(update, context)
-        else:
-            await update.message.reply_text(translations[lang]['wrong_password'])
+    if not user_authenticated.get(user_id, False):
+        # Если не аутентифицирован — просим ввести пароль
+        await update.message.reply_text(translations[lang]['enter_password'])
         return
 
-    # Проверка состояния бота
     if not user_active_status.get(user_id, True):
+        await update.message.reply_text(translations[lang]['bot_stopped'])
         return
 
-    # Обработка команд stop и stopspam
     if text.lower() == "stop":
         user_active_status[user_id] = False
         await update.message.reply_text(translations[lang]['stop_message'])
@@ -192,63 +184,49 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         results = []
 
         for num in sums:
-            if choice == bonus_deposit:
-                sums2 = num * 0.10
-                sums3 = sums2 * 15
-            elif choice == bonus_crypto:
-                sums2 = num * 0.20
-                sums3 = sums2 * 20
+            if choice == bonus_crypto:
+                res1 = num * 20
+                res2 = num * 20
+                res3 = num * 30
+            elif choice == bonus_deposit:
+                res1 = num * 10
+                res2 = num * 10
+                res3 = num * 15
             else:
-                continue
+                res1 = res2 = res3 = 0
 
-            slots = sums3 + num
-            roulette = sums3 * 3.33 + num
-            blackjack = sums3 * 5 + num
-            crash = sums3 * 10 + num
-
-            if lang in ['en', 'tr']:
-                results.append(
-                    f"Amount: {format_number(num)} som\n"
-                    f"🔹 Slots (100%) — {format_number(slots)} som\n"
-                    f"🔹 Roulette (30%) — {format_number(roulette)} som\n"
-                    f"🔹 Blackjack (20%) — {format_number(blackjack)} som\n"
-                    f"🔹 Other games (10%) — {format_number(crash)} som"
-                )
-            else:
-                results.append(
-                    f"Сумма: {format_number(num)} сомов\n"
-                    f"🔹 Слоты (100%) — отыграть {format_number(slots)} сомов\n"
-                    f"🔹 Roulette (30%) — отыграть {format_number(roulette)} сомов\n"
-                    f"🔹 Blackjack (20%) — отыграть {format_number(blackjack)} сомов\n"
-                    f"🔹 Остальные настольные, crash игры и лайв-казино игры (10%) — отыграть {format_number(crash)} сомов"
-                )
+            results.append(
+                f"🎰 Slot: {format_number(res1)}\n"
+                f"🃏 Card: {format_number(res2)}\n"
+                f"🃏 Table: {format_number(res3)}"
+            )
 
         intro = translations[lang]['wager_intro_plural'] if is_plural else translations[lang]['wager_intro_single']
-        result_text = intro + "\n\n".join(results)
-        await update.message.reply_text(result_text)
 
-        user_count_calc[user_id] = user_count_calc.get(user_id, 0) + 1
-        count = user_count_calc[user_id]
+        message = intro + '\n\n'.join(results)
 
         if user_spam_status.get(user_id, True):
-            await update.message.reply_text(translations[lang]['check_sums'])
-        else:
-            if count % 10 == 0:
-                await update.message.reply_text(translations[lang]['check_sums_short'])
-    else:
-        await update.message.reply_text(translations[lang]['choose_bonus_button'])
-        await send_bonus_menu(update, context)
+            message += "\n\n" + translations[lang]['check_sums']
 
+        await update.message.reply_text(message)
+        return
+
+    await update.message.reply_text(translations[lang]['choose_bonus_button'])
 
 if __name__ == '__main__':
-    TOKEN = os.getenv('BOT_TOKEN')  # Или впиши токен прямо сюда
-
+    TOKEN = os.getenv("BOT_TOKEN")  # Укажите ваш токен здесь или через переменные среды
     app = ApplicationBuilder().token(TOKEN).build()
 
-    app.add_handler(CommandHandler('start', start))
-    app.add_handler(CommandHandler('status', status))
-    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), language_selection), group=0)  # Сначала выбираем язык
-    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message), group=1)  # Потом всё остальное
+    app.add_handler(CommandHandler("start", start), group=0)
 
-    print("Бот запущен...")
+    # Группа 0: язык (до выбора языка принимаем только сюда)
+    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), language_selection), group=0)
+
+    # Группа 1: пароль (при выбранном языке, но не аутентифицирован)
+    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), password_handler), group=1)
+
+    # Группа 2: основной функционал (после аутентификации)
+    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message), group=2)
+
+    print("Bot started")
     app.run_polling()
