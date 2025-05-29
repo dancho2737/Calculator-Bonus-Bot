@@ -110,9 +110,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 'tr': "Dil Türkçe olarak seçildi.\nLütfen şifreyi girin:"
             }
             await
-
 update.message.reply_text(text
-
 s[chosen_lang], reply_markup=ReplyKeyboardRemove())
         else:
             await update.message.reply_text(
@@ -255,7 +253,6 @@ er a valid number or numbers.",
                 sums3 = sums2 * 20
             else:
                 sums2 = sums3 = 0
-
         slots = sums3 + num
         roulette = sums3 * 3.33 + num
         blackjack = sums3 * 5 + num
@@ -321,7 +318,7 @@ er a valid number or numbers.",
             )
 
 if name == "__main__":
-    TOKEN = os.getenv("TOKEN")
+    TOKEN = os.getenv("BOT_TOKEN")
     if not TOKEN:
         print("Ошибка: не задан токен в переменной окружения TOKEN")
         exit(1)
