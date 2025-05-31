@@ -297,16 +297,23 @@ user_count_calc[user_id] = user_count_calc.get(user_id, 0) + 1
 count = user_count_calc[user_id]
 
 if user_spam_status.get(user_id, True):
+    await update.message.reply_text(
+        {
+            'ru': "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки. Если же хотите чтобы это сообщение больше не появлялось, то напишите stopspam",
+            'en': "Make sure to double-check the final amounts! This is for your own protection. If you want to stop seeing this message, type stopspam.",
+            'tr': "Lütfen son tutarları mutlaka kontrol edin! Bu sizin güvenliğiniz için. Bu mesajı görmek istemiyorsanız stopspam yazabilirsiniz."
+        }[lang]
+    )
+else:
+    if count % 10 == 0:
         await update.message.reply_text(
             {
-                'ru': "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки. Если же хотите чтобы это сообщение больше не появлялось, то напишите stopspam",
-                'en': "Make sure to double-check the final amounts! This is for your own protection. If you want to stop seeing this message, type stopspam.",
-                'tr': "Lütfen son tutarları mutlaka kontrol edin! Bu sizin güvenliğiniz için. Bu mesajı görmek istemiyorsanız stopspam yazabilirsiniz."
+                'ru': "Вы получаете это сообщение раз в 10 запросов, чтобы не перегружать чат.",
+                'en': "You receive this message once every 10 requests to avoid cluttering the chat.",
+                'tr': "Sohbeti kalabalıklaştırmamak için bu mesajı her 10 istekte bir alırsınız."
             }[lang]
         )
-    else:
-        if count % 10 == 0:
-            await update.message.reply_text(
+
                 {
                     'ru': "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки.",
                     'en': "Make sure to double-check the final amounts! This is for your own protection.",
