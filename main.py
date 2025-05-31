@@ -296,7 +296,7 @@ await update.message.reply_text(result_text)
 user_count_calc[user_id] = user_count_calc.get(user_id, 0) + 1
 count = user_count_calc[user_id]
 
-    if user_spam_status.get(user_id, True):
+if user_spam_status.get(user_id, True):
         await update.message.reply_text(
             {
                 'ru': "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки. Если же хотите чтобы это сообщение больше не появлялось, то напишите stopspam",
