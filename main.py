@@ -277,6 +277,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         results.append(result_text)
 
+   if len(sums) == 1:
+    intro_text = {
+        'ru': "Для выполнения условий отыгрыша с вашей суммой бонуса потребуется сделать следующие объёмы ставок в разных играх:\n",
+        'en': "To meet the wagering requirements for your bonus amount, you will need to place the following bets in different games:\n",
+        'tr': "Bonus tutarınızla çevrim şartlarını karşılamak amacıyla farklı oyunlarda yapılması gereken bahis miktarları:\n"
+    }
+else:
     intro_text = {
         'ru': "Для выполнения условий отыгрыша с вашими суммами бонуса потребуется сделать следующие объёмы ставок в разных играх:\n",
         'en': "To meet the wagering requirements for your bonus amounts, you will need to place the following bets in different games:\n",
