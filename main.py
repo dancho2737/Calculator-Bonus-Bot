@@ -236,7 +236,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 sums2 = sums3 = 0
         else:
             choice_en = choice.lower()
-            if 'deposit' in choice_en or 'депозит' in choice_en:
+            if 'deposit' in choice_en or 'депозит' in choice_en or 'depozito' in choice_en:
                 sums2 = num * 0.10
                 sums3 = sums2 * 15
             elif 'crypto' in choice_en or 'buy' in choice_en or 'kripto' in choice_en or 'bay' in choice_en:
