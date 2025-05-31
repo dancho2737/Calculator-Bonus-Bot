@@ -314,11 +314,11 @@ else:
             }[lang]
         )
 
-                {
+            {
                     'ru': "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки.",
                     'en': "Make sure to double-check the final amounts! This is for your own protection.",
                     'tr': "Lütfen son tutarları mutlaka kontrol edin! Bu sizin güvenliğiniz için."
-                }[lang]
+            }[lang]
             )
 
 if __name__ == "__main__":
