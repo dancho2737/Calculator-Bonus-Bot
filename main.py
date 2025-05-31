@@ -314,12 +314,13 @@ else:
             }[lang]
         )
 
+        await update.message.reply_text(
             {
-                    'ru': "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки.",
-                    'en': "Make sure to double-check the final amounts! This is for your own protection.",
-                    'tr': "Lütfen son tutarları mutlaka kontrol edin! Bu sizin güvenliğiniz için."
+                'ru': "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки.",
+                'en': "Make sure to double-check the final amounts! This is for your own protection.",
+                'tr': "Lütfen son tutarları mutlaka kontrol edin! Bu sizin güvenliğiniz için."
             }[lang]
-            )
+        )
 
 if __name__ == "__main__":
     TOKEN = os.getenv("TOKEN")
