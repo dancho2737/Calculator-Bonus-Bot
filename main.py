@@ -277,55 +277,46 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         results.append(result_text)
 
-if len(sums) == 1:
-    intro_text = {
-        'ru': "Для выполнения условий отыгрыша с вашей суммой бонуса потребуется сделать следующий объём ставок в разных играх:\n",
-        'en': "To meet the wagering requirements for your bonus amount, you will need to place the following bet in different games:\n",
-        'tr': "Bonus tutarınızla çevrim şartlarını karşılamak amacıyla farklı oyunlarda yapılması gereken bahis miktarı:\n"
-    }
-else:
-    intro_text = {
-        'ru': "Для выполнения условий отыгрыша с вашими суммами бонуса потребуется сделать следующие объёмы ставок в разных играх:\n",
-        'en': "To meet the wagering requirements for your bonus amounts, you will need to place the following bets in different games:\n",
-        'tr': "Bonus tutarları için çevrim şartlarını karşılamak amacıyla farklı oyunlarda yapılması gereken bahis miktarları:\n"
-    }
+    if len(sums) == 1:
+        intro_text = {
+            'ru': "Для выполнения условий отыгрыша с вашей суммой бонуса потребуется сделать следующий объём ставок в разных играх:\n",
+            'en': "To meet the wagering requirements for your bonus amount, you will need to place the following bet in different games:\n",
+            'tr': "Bonus tutarınızla çevrim şartlarını karşılamak amacıyla farklı oyunlarda yapılması gereken bahis miktarı:\n"
+        }
+    else:
+        intro_text = {
+            'ru': "Для выполнения условий отыгрыша с вашими суммами бонуса потребуется сделать следующие объёмы ставок в разных играх:\n",
+            'en': "To meet the wagering requirements for your bonus amounts, you will need to place the following bets in different games:\n",
+            'tr': "Bonus tutarları için çevrim şartlarını karşılamak amacıyla farklı oyunlarda yapılması gereken bahis miktarları:\n"
+        }
 
-result_text = intro_text[lang] + "\n\n".join(results)
-await update.message.reply_text(result_text)
+    result_text = intro_text[lang] + "\n\n".join(results)
+    await update.message.reply_text(result_text)
 
-user_count_calc[user_id] = user_count_calc.get(user_id, 0) + 1
-count = user_count_calc[user_id]
+    user_count_calc[user_id] = user_count_calc.get(user_id, 0) + 1
+    count = user_count_calc[user_id]
 
-if user_spam_status.get(user_id, True):
-    await update.message.reply_text(
-        {
-            'ru': "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки. Если же хотите чтобы это сообщение больше не появлялось, то напишите stopspam",
-            'en': "Make sure to double-check the final amounts! This is for your own protection. If you want to stop seeing this message, type stopspam.",
-            'tr': "Lütfen son tutarları mutlaka kontrol edin! Bu sizin güvenliğiniz için. Bu mesajı görmek istemiyorsanız stopspam yazabilirsiniz."
-        }[lang]
-    )
-else:
-    if count % 10 == 0:
+    if user_spam_status.get(user_id, True):
         await update.message.reply_text(
             {
-                'ru': "Вы получаете это сообщение раз в 10 запросов, чтобы не перегружать чат.",
-                'en': "You receive this message once every 10 requests to avoid cluttering the chat.",
-                'tr': "Sohbeti kalabalıklaştırmamak için bu mesajı her 10 istekte bir alırsınız."
+                'ru': "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки. Если же хотите чтобы это сообщение больше не появлялось, то напишите stopspam",
+                'en': "Make sure to double-check the final amounts! This is for your own protection. If you want to stop seeing this message, type stopspam.",
+                'tr': "Lütfen son tutarları mutlaka kontrol edin! Bu sizin güvenliğiniz için. Bu mesajı görmek istemiyorsanız stopspam yazabilirsiniz."
+            }[lang]
+        )
+    elif count % 10 == 0:
+        await update.message.reply_text(
+            {
+                'ru': "10 расчетов уже сделано, напоминаем перепроверять суммы.",
+                'en': "10 calculations done, please remember to double-check the amounts.",
+                'tr': "10 hesaplama yapıldı, lütfen tutarları kontrol etmeyi unutmayın."
             }[lang]
         )
 
-        await update.message.reply_text(
-            {
-                'ru': "Обязательно перепроверяйте итоговые суммы! Это для вашей же страховки.",
-                'en': "Make sure to double-check the final amounts! This is for your own protection.",
-                'tr': "Lütfen son tutarları mutlaka kontrol edin! Bu sizin güvenliğiniz için."
-            }[lang]
-        )
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     TOKEN = os.getenv("TOKEN")
     if not TOKEN:
-        print("Ошибка: не задан токен в переменной окружения TOKEN")
+        print("ERROR: Please set TOKEN environment variable.")
         exit(1)
 
     app = ApplicationBuilder().token(TOKEN).build()
@@ -335,5 +326,5 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("lang", change_language))
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
 
-    print("Бот запущен")
+    print("Bot is running...")
     app.run_polling()
