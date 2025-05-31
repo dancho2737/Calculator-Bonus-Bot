@@ -279,9 +279,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 if len(sums) == 1:
     intro_text = {
-        'ru': "Для выполнения условий отыгрыша с вашей суммой бонуса потребуется сделать следующие объёмы ставок в разных играх:\n",
-        'en': "To meet the wagering requirements for your bonus amount, you will need to place the following bets in different games:\n",
-        'tr': "Bonus tutarınızla çevrim şartlarını karşılamak amacıyla farklı oyunlarda yapılması gereken bahis miktarları:\n"
+        'ru': "Для выполнения условий отыгрыша с вашей суммой бонуса потребуется сделать следующий объём ставок в разных играх:\n",
+        'en': "To meet the wagering requirements for your bonus amount, you will need to place the following bet in different games:\n",
+        'tr': "Bonus tutarınızla çevrim şartlarını karşılamak amacıyla farklı oyunlarda yapılması gereken bahis miktarı:\n"
     }
 else:
     intro_text = {
@@ -290,11 +290,11 @@ else:
         'tr': "Bonus tutarları için çevrim şartlarını karşılamak amacıyla farklı oyunlarda yapılması gereken bahis miktarları:\n"
     }
 
-    result_text = intro_text[lang] + "\n\n".join(results)
-    await update.message.reply_text(result_text)
+result_text = intro_text[lang] + "\n\n".join(results)
+await update.message.reply_text(result_text)
 
-    user_count_calc[user_id] = user_count_calc.get(user_id, 0) + 1
-    count = user_count_calc[user_id]
+user_count_calc[user_id] = user_count_calc.get(user_id, 0) + 1
+count = user_count_calc[user_id]
 
     if user_spam_status.get(user_id, True):
         await update.message.reply_text(
