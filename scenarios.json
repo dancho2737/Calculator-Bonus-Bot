@@ -1,1 +1,1091 @@
+[
+  {
+    "question": "Я закинул 150 000 сом за неделю. Где мой кэшбэк и бонусы?! Если не вернёте хоть что-то — вынесу всё в паблик!",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "aggressive",
+    "category": "BonusesAndPromotions",
+    "risk_level": "high"
+  },
+  {
+    "question": "Я не собираюсь давать вам свой номер! Я выиграл честно — дайте деньги! У вас и так все мои данные!",
+    "expected_skill": "Terms",
+    "tone": "demanding",
+    "category": "Terms",
+    "risk_level": "high"
+  },
+  {
+    "question": "Я не помню, какой бонус активировал, сколько нужно отыгрывать и почему баланс списали! Объясните нормально!",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "confused",
+    "category": "BonusesAndPromotions",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Я играл в одну игру 3 дня — теперь она не даёт вообще! Вы всё подкрутили! Я это запишу и в лицензию отправлю!",
+    "expected_skill": "Games",
+    "tone": "accusatory",
+    "category": "Games",
+    "risk_level": "high"
+  },
+  {
+    "question": "Вы охренели?! Где мои деньги?! Я жду уже 2 часа! Что за бардак у вас?!",
+    "expected_skill": "Terms",
+    "tone": "aggressive",
+    "category": "Terms",
+    "risk_level": "high"
+  },
+  {
+    "question": "Я всё проиграл. Помогите мне... Я не могу остановиться. Заблокируйте меня и скажите, что делать...",
+    "expected_skill": "AML",
+    "tone": "desperate",
+    "category": "AML",
+    "risk_level": "high"
+  },
+  {
+    "question": "Вы не принимаете мой документ! Это единственный, что у меня есть! Почему вы не верите мне?!",
+    "expected_skill": "KYC",
+    "tone": "frustrated",
+    "category": "KYC",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Я написал в поддержку ещё вчера — тишина! Какой у вас 24/7, если все молчат?!",
+    "expected_skill": "Other",
+    "tone": "angry",
+    "category": "Other",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Вывод ушёл, а деньги на карту не пришли! Где мои деньги?! Вы меня обманываете?!",
+    "expected_skill": "Terms",
+    "tone": "accusatory",
+    "category": "Terms",
+    "risk_level": "high"
+  },
+  {
+    "question": "Я только что выиграл джекпот, но деньги не пришли. Почему?!",
+    "expected_skill": "Terms",
+    "tone": "confused",
+    "category": "Terms",
+    "risk_level": "high"
+  },
+  {
+    "question": "Я был пьян и не помню, как проиграл деньги. Верните, пожалуйста, всё обратно.",
+    "expected_skill": "Terms",
+    "tone": "pleading",
+    "category": "Terms",
+    "risk_level": "high"
+  },
+  {
+    "question": "Удалите мой аккаунт и все данные, я больше не хочу тут играть!",
+    "expected_skill": "Terms",
+    "tone": "firm",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Если поможешь обойти лимит — поделюсь выигрышем. Договоримся?",
+    "expected_skill": "Terms",
+    "tone": "suspicious",
+    "category": "Terms",
+    "risk_level": "critical"
+  },
+  {
+    "question": "У меня зависла игра, и она не показывает выигрыш! Что происходит?!",
+    "expected_skill": "Games",
+    "tone": "confused",
+    "category": "Games",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Почему мой друг выигрывает больше, хотя мы играем в одну и ту же игру?",
+    "expected_skill": "Games",
+    "tone": "curious",
+    "category": "Games",
+    "risk_level": "low"
+  },
+  {
+    "question": "Я уже договорился с админом по имени Алексей. Он обещал бонус! Где он?!",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "demanding",
+    "category": "BonusesAndPromotions",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Почему вы отменили мой бонус?! У меня есть видео, что всё было честно!",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "accusatory",
+    "category": "BonusesAndPromotions",
+    "risk_level": "high"
+  },
+  {
+    "question": "Вы меня троллите? Я уверен, что вы не человек, а бот. Это уже не смешно!",
+    "expected_skill": "Other",
+    "tone": "mocking",
+    "category": "Other",
+    "risk_level": "low"
+  },
+  {
+    "question": "Моя жена узнала, что я тут играю! Удалите всё немедленно, чтобы она не нашла!",
+    "expected_skill": "Terms",
+    "tone": "urgent",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Я хочу зарегистрироваться с вымышленными данными. Это точно не вызовет проблем?",
+    "expected_skill": "Terms",
+    "tone": "curious",
+    "category": "Terms",
+    "risk_level": "critical"
+  },
+  {
+    "question": "Я просто хочу пообщаться — вы человек или бот?",
+    "expected_skill": "Other",
+    "tone": "curious",
+    "category": "Other",
+    "risk_level": "low"
+  },
+  {
+    "question": "Я вышла замуж и сменила фамилию. Обновите, пожалуйста, мои данные.",
+    "expected_skill": "Terms",
+    "tone": "polite",
+    "category": "Terms",
+    "risk_level": "low"
+  },
+  {
+    "question": "Здравствуйте. Мой муж играет у вас без остановки! Пожалуйста, заблокируйте его аккаунт!",
+    "expected_skill": "AML",
+    "tone": "urgent",
+    "category": "AML",
+    "risk_level": "high"
+  },
+  {
+    "question": "Я не согласен с результатом игры. Могу ли я подать жалобу или апелляцию?",
+    "expected_skill": "Terms",
+    "tone": "polite",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Как поставить лимит на депозит? Мне нужно ограничить себя на неделю или месяц.",
+    "expected_skill": "AML",
+    "tone": "polite",
+    "category": "AML",
+    "risk_level": "low"
+  },
+  {
+    "question": "Где можно посмотреть мою историю входов и игровые сессии?",
+    "expected_skill": "Terms",
+    "tone": "neutral",
+    "category": "Terms",
+    "risk_level": "low"
+  },
+  {
+    "question": "Можно ли отправить выигрыш другому игроку? Просто перевести прямо на его аккаунт?",
+    "expected_skill": "Terms",
+    "tone": "curious",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Где посмотреть, сколько я проиграл за всё время? Есть такая статистика?",
+    "expected_skill": "Terms",
+    "tone": "curious",
+    "category": "Terms",
+    "risk_level": "low"
+  },
+  {
+    "question": "Вы точно не подкручиваете игры? Я три дня в минусе подряд — это вообще нормально?!",
+    "expected_skill": "Games",
+    "tone": "accusatory",
+    "category": "Games",
+    "risk_level": "high"
+  },
+  {
+    "question": "Можно ли играть без полной верификации? Что мне будет доступно?",
+    "expected_skill": "KYC",
+    "tone": "curious",
+    "category": "KYC",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Как включить уведомления от казино? Ничего не приходит.",
+    "expected_skill": "Other",
+    "tone": "confused",
+    "category": "Other",
+    "risk_level": "low"
+  },
+  {
+    "question": "Я случайно закинул больше, чем хотел. Можете вернуть лишнее?",
+    "expected_skill": "Terms",
+    "tone": "polite",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "У меня два аккаунта. Переведите, пожалуйста, деньги со старого на новый.",
+    "expected_skill": "Terms",
+    "tone": "polite",
+    "category": "Terms",
+    "risk_level": "critical"
+  },
+  {
+    "question": "Я неделю не заходил, а деньги исчезли! Это точно не я играл!",
+    "expected_skill": "Terms",
+    "tone": "accusatory",
+    "category": "Terms",
+    "risk_level": "high"
+  },
+  {
+    "question": "Хочу пообщаться с администрацией напрямую. Это возможно?",
+    "expected_skill": "Other",
+    "tone": "curious",
+    "category": "Other",
+    "risk_level": "low"
+  },
+  {
+    "question": "Можно пройти обучение, как правильно играть и отыгрывать бонусы?",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "polite",
+    "category": "BonusesAndPromotions",
+    "risk_level": "low"
+  },
+  {
+    "question": "Что такое RTP и как найти игры, где он выше?",
+    "expected_skill": "Games",
+    "tone": "curious",
+    "category": "Games",
+    "risk_level": "low"
+  },
+  {
+    "question": "Как удалить историю моих игр? Не хочу, чтобы она сохранялась.",
+    "expected_skill": "Terms",
+    "tone": "polite",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Пришло уведомление о входе с другого устройства — это вы заходили?",
+    "expected_skill": "Terms",
+    "tone": "concerned",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "А это вообще безопасно — отправлять вам фото паспорта, чтобы поменять имя?",
+    "expected_skill": "KYC",
+    "tone": "concerned",
+    "category": "KYC",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Как быстро отыграть бонус? Есть какие-то фишки или баги? Поможешь — поделюсь выигрышем!",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "suspicious",
+    "category": "BonusesAndPromotions",
+    "risk_level": "critical"
+  },
+  {
+    "question": "Не могу найти, как выйти из аккаунта. Поможете?",
+    "expected_skill": "Other",
+    "tone": "polite",
+    "category": "Other",
+    "risk_level": "low"
+  },
+  {
+    "question": "Хочу пополнить через крипту. Как это работает?",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "curious",
+    "category": "BonusesAndPromotions",
+    "risk_level": "low"
+  },
+  {
+    "question": "Я сделал вывод на заблокированную карту. Отмените, пожалуйста, я отправлю на другую.",
+    "expected_skill": "Terms",
+    "tone": "polite",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Вывод не пришёл уже 5 часов! Это нормально вообще? Или вы мошенники?",
+    "expected_skill": "Terms",
+    "tone": "accusatory",
+    "category": "Terms",
+    "risk_level": "high"
+  },
+  {
+    "question": "Где почитать правила конкретной игры? Я не понимаю, как она работает.",
+    "expected_skill": "Games",
+    "tone": "curious",
+    "category": "Games",
+    "risk_level": "low"
+  },
+  {
+    "question": "Почему сайт такой медленный? Всё тормозит!",
+    "expected_skill": "Other",
+    "tone": "frustrated",
+    "category": "Other",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Когда уже добавят промокод? Жду новых акций!",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "eager",
+    "category": "BonusesAndPromotions",
+    "risk_level": "low"
+  },
+  {
+    "question": "Я отправил все данные, но не могу прислать фото паспорта. Можете всё равно поменять номер?",
+    "expected_skill": "KYC",
+    "tone": "polite",
+    "category": "KYC",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Можно ли накопить фриспины и использовать их позже? Или они сгорают?",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "curious",
+    "category": "BonusesAndPromotions",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Почему у меня не начисляется кэшбэк? Я играл каждый день!",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "confused",
+    "category": "BonusesAndPromotions",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Как заблокировать себя на 30 дней? Хочу сделать перерыв.",
+    "expected_skill": "AML",
+    "tone": "polite",
+    "category": "AML",
+    "risk_level": "low"
+  },
+  {
+    "question": "Можно ли играть на демо без регистрации?",
+    "expected_skill": "Games",
+    "tone": "curious",
+    "category": "Games",
+    "risk_level": "low"
+  },
+  {
+    "question": "Почему вы не отвечаете на мои сообщения? Уже сутки жду!",
+    "expected_skill": "Other",
+    "tone": "frustrated",
+    "category": "Other",
+    "risk_level": "medium"
+  },
+  {
+    "question": "У меня возник спор с казино по выплатам. Что делать?",
+    "expected_skill": "Terms",
+    "tone": "concerned",
+    "category": "Terms",
+    "risk_level": "high"
+  },
+  {
+    "question": "Кто отвечает за честность игр? Можно ли проверить RNG?",
+    "expected_skill": "Games",
+    "tone": "curious",
+    "category": "Games",
+    "risk_level": "low"
+  },
+  {
+    "question": "Можно ли пополнить счёт через телефон?",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "curious",
+    "category": "BonusesAndPromotions",
+    "risk_level": "low"
+  },
+  {
+    "question": "Почему моя ставка не прошла? Деньги списались, а игра не началась!",
+    "expected_skill": "Games",
+    "tone": "accusatory",
+    "category": "Games",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Как поменять валюту аккаунта с сомов на доллары?",
+    "expected_skill": "Terms",
+    "tone": "polite",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Вчера выводил выигрыш, а сегодня он исчез с баланса!",
+    "expected_skill": "Terms",
+    "tone": "accusatory",
+    "category": "Terms",
+    "risk_level": "high"
+  },
+  {
+    "question": "Я хочу снять ограничение на вывод. Куда обратиться?",
+    "expected_skill": "Terms",
+    "tone": "polite",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Можно ли использовать VPN для игры в казино?",
+    "expected_skill": "Terms",
+    "tone": "curious",
+    "category": "Terms",
+    "risk_level": "critical"
+  },
+  {
+    "question": "Кто контролирует, чтобы казино не обманывало игроков?",
+    "expected_skill": "Terms",
+    "tone": "curious",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Где найти правила акции с фриспинами?",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "polite",
+    "category": "BonusesAndPromotions",
+    "risk_level": "low"
+  },
+  {
+    "question": "Почему у меня заблокировали вывод? Я ничего не нарушал!",
+    "expected_skill": "Terms",
+    "tone": "accusatory",
+    "category": "Terms",
+    "risk_level": "high"
+  },
+  {
+    "question": "Сколько времени занимает верификация паспорта?",
+    "expected_skill": "KYC",
+    "tone": "curious",
+    "category": "KYC",
+    "risk_level": "low"
+  },
+  {
+    "question": "Можно ли привязать к аккаунту несколько карт для вывода?",
+    "expected_skill": "Terms",
+    "tone": "curious",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Как отключить автоматическую подписку на бонусы?",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "polite",
+    "category": "BonusesAndPromotions",
+    "risk_level": "low"
+  },
+  {
+    "question": "Почему заблокировали аккаунт без предупреждения? Я не нарушал правила!",
+    "expected_skill": "Terms",
+    "tone": "accusatory",
+    "category": "Terms",
+    "risk_level": "high"
+  },
+  {
+    "question": "Могу ли я изменить дату рождения после регистрации?",
+    "expected_skill": "Terms",
+    "tone": "polite",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Можно ли вывести бонусные деньги без отыгрыша?",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "curious",
+    "category": "BonusesAndPromotions",
+    "risk_level": "high"
+  },
+  {
+    "question": "У меня завис слот, но деньги списали. Верните их!",
+    "expected_skill": "Games",
+    "tone": "angry",
+    "category": "Games",
+    "risk_level": "high"
+  },
+  {
+    "question": "Как отменить заявку на вывод средств?",
+    "expected_skill": "Terms",
+    "tone": "polite",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Есть ли у вас мобильное приложение? Где скачать?",
+    "expected_skill": "Other",
+    "tone": "curious",
+    "category": "Other",
+    "risk_level": "low"
+  },
+  {
+    "question": "Я выиграл, но сумма на балансе не изменилась. Что делать?",
+    "expected_skill": "Terms",
+    "tone": "confused",
+    "category": "Terms",
+    "risk_level": "high"
+  },
+  {
+    "question": "Как участвовать в турнирах и соревнованиях на сайте?",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "curious",
+    "category": "BonusesAndPromotions",
+    "risk_level": "low"
+  },
+  {
+    "question": "Могу ли я играть без регистрации? Есть ли демо-режим?",
+    "expected_skill": "Games",
+    "tone": "curious",
+    "category": "Games",
+    "risk_level": "low"
+  },
+  {
+    "question": "Почему у меня не зачисляются выигрыши по бонусу?",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "confused",
+    "category": "BonusesAndPromotions",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Как отключить уведомления на почту и телефон?",
+    "expected_skill": "Other",
+    "tone": "polite",
+    "category": "Other",
+    "risk_level": "low"
+  },
+  {
+    "question": "Можно ли заблокировать друга, чтобы он не играл у вас?",
+    "expected_skill": "AML",
+    "tone": "curious",
+    "category": "AML",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Почему игра часто вылетает и зависает?",
+    "expected_skill": "Games",
+    "tone": "frustrated",
+    "category": "Games",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Могу ли я удалить историю своих игр?",
+    "expected_skill": "Terms",
+    "tone": "polite",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Как настроить двухфакторную аутентификацию?",
+    "expected_skill": "Terms",
+    "tone": "curious",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Что делать, если забыл пароль?",
+    "expected_skill": "Terms",
+    "tone": "polite",
+    "category": "Terms",
+    "risk_level": "low"
+  },
+  {
+    "question": "Можно ли сменить номер телефона без верификации?",
+    "expected_skill": "KYC",
+    "tone": "curious",
+    "category": "KYC",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Что такое ответственная игра? Как контролировать себя?",
+    "expected_skill": "AML",
+    "tone": "curious",
+    "category": "AML",
+    "risk_level": "low"
+  },
+  {
+    "question": "Почему не приходит SMS с кодом подтверждения?",
+    "expected_skill": "Other",
+    "tone": "confused",
+    "category": "Other",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Могу ли я использовать несколько бонусов одновременно?",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "curious",
+    "category": "BonusesAndPromotions",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Как проверить, что мой аккаунт не взломан?",
+    "expected_skill": "Terms",
+    "tone": "concerned",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Где можно посмотреть правила сайта?",
+    "expected_skill": "Terms",
+    "tone": "polite",
+    "category": "Terms",
+    "risk_level": "low"
+  },
+  {
+    "question": "Как получить консультацию по бонусам?",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "polite",
+    "category": "BonusesAndPromotions",
+    "risk_level": "low"
+  },
+  {
+    "question": "Почему моя карта не поддерживается для вывода?",
+    "expected_skill": "Terms",
+    "tone": "confused",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Можно ли играть в казино с мобильного телефона?",
+    "expected_skill": "Games",
+    "tone": "curious",
+    "category": "Games",
+    "risk_level": "low"
+  },
+  {
+    "question": "Почему мой аккаунт заблокирован? Я ничего не делал!",
+    "expected_skill": "Terms",
+    "tone": "accusatory",
+    "category": "Terms",
+    "risk_level": "high"
+  },
+  {
+    "question": "Как отменить подписку на рассылку?",
+    "expected_skill": "Other",
+    "tone": "polite",
+    "category": "Other",
+    "risk_level": "low"
+  },
+  {
+    "question": "Как мне увеличить лимит на вывод средств?",
+    "expected_skill": "Terms",
+    "tone": "polite",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Могу ли я изменить данные паспорта после регистрации?",
+    "expected_skill": "KYC",
+    "tone": "curious",
+    "category": "KYC",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Как получить промокод на бонус?",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "curious",
+    "category": "BonusesAndPromotions",
+    "risk_level": "low"
+  },
+  {
+    "question": "Почему у меня списались деньги, но ставка не появилась?",
+    "expected_skill": "Games",
+    "tone": "accusatory",
+    "category": "Games",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Можно ли менять настройки звука в игре?",
+    "expected_skill": "Games",
+    "tone": "curious",
+    "category": "Games",
+    "risk_level": "low"
+  },
+  {
+    "question": "Как узнать, сколько времени осталось на отыгрыш бонуса?",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "curious",
+    "category": "BonusesAndPromotions",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Могу ли я вывести деньги без прохождения верификации?",
+    "expected_skill": "KYC",
+    "tone": "curious",
+    "category": "KYC",
+    "risk_level": "high"
+  },
+  {
+    "question": "Что делать, если игра зависла во время бонусного раунда?",
+    "expected_skill": "Games",
+    "tone": "concerned",
+    "category": "Games",
+    "risk_level": "high"
+  },
+  {
+    "question": "Как работает программа лояльности для постоянных игроков?",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "curious",
+    "category": "BonusesAndPromotions",
+    "risk_level": "low"
+  },
+  {
+    "question": "Можно ли запросить удаление всех моих данных?",
+    "expected_skill": "Terms",
+    "tone": "polite",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Почему я не получаю уведомления о новых акциях?",
+    "expected_skill": "Other",
+    "tone": "confused",
+    "category": "Other",
+    "risk_level": "low"
+  },
+  {
+    "question": "Как правильно играть, чтобы повысить шансы на выигрыш?",
+    "expected_skill": "Games",
+    "tone": "curious",
+    "category": "Games",
+    "risk_level": "low"
+  },
+  {
+    "question": "Можно ли сменить способ вывода после подачи заявки?",
+    "expected_skill": "Terms",
+    "tone": "polite",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Какие игры доступны в режиме живого казино?",
+    "expected_skill": "Games",
+    "tone": "curious",
+    "category": "Games",
+    "risk_level": "low"
+  },
+  {
+    "question": "Можно ли играть без депозита и получать бонусы?",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "curious",
+    "category": "BonusesAndPromotions",
+    "risk_level": "low"
+  },
+  {
+    "question": "Почему я не могу вывести всю сумму выигрыша сразу?",
+    "expected_skill": "Terms",
+    "tone": "confused",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Как проверить историю моих платежей и выводов?",
+    "expected_skill": "Terms",
+    "tone": "polite",
+    "category": "Terms",
+    "risk_level": "low"
+  },
+  {
+    "question": "Можно ли изменить email, если я забыл пароль?",
+    "expected_skill": "Terms",
+    "tone": "curious",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Почему промокод не активируется при вводе?",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "confused",
+    "category": "BonusesAndPromotions",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Как работает кэшбэк? Какая у него ставка?",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "curious",
+    "category": "BonusesAndPromotions",
+    "risk_level": "low"
+  },
+  {
+    "question": "Как быстро обрабатываются заявки на вывод?",
+    "expected_skill": "Terms",
+    "tone": "curious",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Можно ли играть в казино из моей страны?",
+    "expected_skill": "Terms",
+    "tone": "curious",
+    "category": "Terms",
+    "risk_level": "critical"
+  },
+  {
+    "question": "Как установить лимит на проигрыш в неделю?",
+    "expected_skill": "AML",
+    "tone": "polite",
+    "category": "AML",
+    "risk_level": "low"
+  },
+  {
+    "question": "Почему меня просят пройти повторную верификацию?",
+    "expected_skill": "KYC",
+    "tone": "confused",
+    "category": "KYC",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Можно ли объединить несколько бонусов для игры?",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "curious",
+    "category": "BonusesAndPromotions",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Как изменить пароль, если забыл старый?",
+    "expected_skill": "Terms",
+    "tone": "polite",
+    "category": "Terms",
+    "risk_level": "low"
+  },
+  {
+    "question": "Можно ли играть в казино без интернета?",
+    "expected_skill": "Games",
+    "tone": "curious",
+    "category": "Games",
+    "risk_level": "low"
+  },
+  {
+    "question": "Где найти справку по каждой игре?",
+    "expected_skill": "Games",
+    "tone": "polite",
+    "category": "Games",
+    "risk_level": "low"
+  },
+  {
+    "question": "Как установить дневной лимит на ставки?",
+    "expected_skill": "AML",
+    "tone": "polite",
+    "category": "AML",
+    "risk_level": "low"
+  },
+  {
+    "question": "Почему мой аккаунт временно заблокирован?",
+    "expected_skill": "Terms",
+    "tone": "confused",
+    "category": "Terms",
+    "risk_level": "high"
+  },
+  {
+    "question": "Могу ли я вывести выигрыш на электронный кошелек?",
+    "expected_skill": "Terms",
+    "tone": "curious",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Что делать, если выигрыш не поступил на счет?",
+    "expected_skill": "Terms",
+    "tone": "concerned",
+    "category": "Terms",
+    "risk_level": "high"
+  },
+  {
+    "question": "Как узнать, что игра честная и не подкручена?",
+    "expected_skill": "Games",
+    "tone": "curious",
+    "category": "Games",
+    "risk_level": "low"
+  },
+  {
+    "question": "Можно ли перенести данные с другого аккаунта?",
+    "expected_skill": "Terms",
+    "tone": "curious",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Какие документы нужны для вывода крупной суммы?",
+    "expected_skill": "KYC",
+    "tone": "curious",
+    "category": "KYC",
+    "risk_level": "high"
+  },
+  {
+    "question": "Можно ли временно заморозить аккаунт?",
+    "expected_skill": "Terms",
+    "tone": "polite",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Как узнать срок действия бонуса?",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "curious",
+    "category": "BonusesAndPromotions",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Почему я не вижу баланс бонусных средств?",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "confused",
+    "category": "BonusesAndPromotions",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Можно ли выводить деньги на карту другого человека?",
+    "expected_skill": "Terms",
+    "tone": "curious",
+    "category": "Terms",
+    "risk_level": "high"
+  },
+  {
+    "question": "Как подать жалобу на работу поддержки?",
+    "expected_skill": "Other",
+    "tone": "angry",
+    "category": "Other",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Какие языки поддерживаются на сайте?",
+    "expected_skill": "Other",
+    "tone": "curious",
+    "category": "Other",
+    "risk_level": "low"
+  },
+  {
+    "question": "Почему промокод сгорает, если не использовать вовремя?",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "confused",
+    "category": "BonusesAndPromotions",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Как быстро обрабатываются депозиты?",
+    "expected_skill": "Terms",
+    "tone": "curious",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Можно ли участвовать в акции с нескольких аккаунтов?",
+    "expected_skill": "Terms",
+    "tone": "curious",
+    "category": "Terms",
+    "risk_level": "high"
+  },
+  {
+    "question": "Почему не работает чат поддержки?",
+    "expected_skill": "Other",
+    "tone": "frustrated",
+    "category": "Other",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Можно ли изменить настройки безопасности после регистрации?",
+    "expected_skill": "Terms",
+    "tone": "curious",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Как восстановить доступ, если заблокировали за нарушение?",
+    "expected_skill": "Terms",
+    "tone": "polite",
+    "category": "Terms",
+    "risk_level": "high"
+  },
+  {
+    "question": "Почему я не получаю приветственный бонус?",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "confused",
+    "category": "BonusesAndPromotions",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Как удалить аккаунт навсегда?",
+    "expected_skill": "Terms",
+    "tone": "polite",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Можно ли поменять страну в профиле после регистрации?",
+    "expected_skill": "Terms",
+    "tone": "curious",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Какие способы оплаты поддерживаются на сайте?",
+    "expected_skill": "Terms",
+    "tone": "curious",
+    "category": "Terms",
+    "risk_level": "low"
+  },
+  {
+    "question": "Можно ли играть без скачивания дополнительного ПО?",
+    "expected_skill": "Games",
+    "tone": "curious",
+    "category": "Games",
+    "risk_level": "low"
+  },
+  {
+    "question": "Как связаться с VIP-менеджером?",
+    "expected_skill": "Other",
+    "tone": "polite",
+    "category": "Other",
+    "risk_level": "low"
+  },
+  {
+    "question": "Как быстро можно начать играть после регистрации?",
+    "expected_skill": "Other",
+    "tone": "curious",
+    "category": "Other",
+    "risk_level": "low"
+  },
+  {
+    "question": "Почему у меня не списываются ставки с бонусного баланса?",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "confused",
+    "category": "BonusesAndPromotions",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Можно ли изменить email после регистрации?",
+    "expected_skill": "Terms",
+    "tone": "polite",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Почему заблокировали вывод средств?",
+    "expected_skill": "Terms",
+    "tone": "accusatory",
+    "category": "Terms",
+    "risk_level": "high"
+  },
+  {
+    "question": "Можно ли получить бонус за регистрацию?",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "curious",
+    "category": "BonusesAndPromotions",
+    "risk_level": "low"
+  },
+  {
+    "question": "Как поменять валюту на сайте?",
+    "expected_skill": "Terms",
+    "tone": "curious",
+    "category": "Terms",
+    "risk_level": "medium"
+  },
+  {
+    "question": "Какие акции сейчас активны?",
+    "expected_skill": "BonusesAndPromotions",
+    "tone": "curious",
+    "category": "BonusesAndPromotions",
+    "risk_level": "low"
+  }
+]
+
+
+
 
