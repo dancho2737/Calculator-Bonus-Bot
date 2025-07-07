@@ -74,7 +74,9 @@ session = {}
 # === LOAD SCENARIOS AND RULES ===
 def load_scenarios():
     with open(SCENARIO_FILE, encoding='utf-8') as f:
-        return json.load(f)
+        data = json.load(f)
+    random.shuffle(data)  # Перемешиваем список вопросов для рандома
+    return data
 
 def load_rules():
     all_rules = []
@@ -105,14 +107,16 @@ def evaluate_answer(question, expected_skill, answer):
 Ответь строго в формате JSON:
 {{"evaluation": "correct|partial|incorrect", "reason": "...", "grammar_issues": "..."}}
 """
-    response = openai.ChatCompletion.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}]
-    )
     try:
-        result = json.loads(response["choices"][0]["message"]["content"].strip())
+        response = openai.ChatCompletion.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        content = response["choices"][0]["message"]["content"].strip()
+        logger.info(f"OpenAI raw response: {content}")
+        result = json.loads(content)
     except Exception as e:
-        logger.error(f"Ошибка парсинга ответа ИИ: {e}")
+        logger.error(f"Ошибка парсинга ответа ИИ или вызова OpenAI: {e}")
         result = {"evaluation": "incorrect", "reason": "Ошибка анализа ответа ИИ", "grammar_issues": ""}
     return result
 
@@ -194,66 +198,60 @@ async def start_training(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Сначала авторизуйтесь через /auth.")
         return
 
+    # Инициализируем параметры тренировки
     session[user_id]["score"] = {"correct": 0, "partial": 0, "incorrect": 0}
-
-    scenario = load_scenarios()
-
-    # Копируем список вопросов, чтобы выбирать случайно
-    session[user_id]["remaining_questions"] = scenario.copy()
+    session[user_id]["step"] = 0
+    session[user_id]["scenario"] = load_scenarios()
 
     await ask_question(update, context)
     return AWAITING_ANSWER
 
 async def ask_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    remaining = session[user_id].get("remaining_questions", [])
+    index = session[user_id]["step"]
+    scenario = session[user_id]["scenario"]
 
-    if not remaining:
+    if index >= len(scenario):
         await update.message.reply_text("Тренировка завершена. Напишите /stop для просмотра статистики.")
         return ConversationHandler.END
 
-    question_entry = random.choice(remaining)
-
-    # Сохраняем текущий вопрос
-    session[user_id]["current_question"] = question_entry
-
-    # Удаляем выбранный вопрос из оставшихся
-    remaining.remove(question_entry)
-    session[user_id]["remaining_questions"] = remaining
-
-    question_text = question_entry["question"]
-    await update.message.reply_text(f"Вопрос: {question_text}")
+    question = scenario[index]["question"]
+    await update.message.reply_text(f"Вопрос: {question}")
 
 # --- ОБРАБОТКА ОТВЕТОВ ---
 async def process_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
+    answer = update.message.text.strip()
+    logger.info(f"User {user_id} ответил: {answer}")
 
-    entry = session[user_id].get("current_question")
-    if not entry:
-        await update.message.reply_text("Ошибка: вопрос не найден. Начните заново с /start.")
-        return ConversationHandler.END
-
-    answer = update.message.text
+    scenario = session[user_id]["scenario"]
+    index = session[user_id]["step"]
+    entry = scenario[index]
 
     result = evaluate_answer(entry["question"], entry["expected_skill"], answer)
     evaluation = result.get("evaluation", "incorrect")
+    reason = result.get("reason", "")
     grammar = result.get("grammar_issues", "")
 
-    # Логирование
+    logger.info(f"Оценка ИИ: {evaluation}, причина: {reason}")
+
+    # Логируем в базу
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute("INSERT INTO logs (user_id, question, answer, evaluation, grammar_issues) VALUES (?, ?, ?, ?, ?)",
-              (user_id, entry["question"], answer, evaluation, grammar))
+    c.execute(
+        "INSERT INTO logs (user_id, question, answer, evaluation, grammar_issues) VALUES (?, ?, ?, ?, ?)",
+        (user_id, entry["question"], answer, evaluation, grammar)
+    )
     conn.commit()
     conn.close()
 
     session[user_id]["score"].setdefault(evaluation, 0)
     session[user_id]["score"][evaluation] += 1
-
     session[user_id]["last"] = {"question": entry["question"], "answer": answer, "evaluation": evaluation}
 
     if evaluation == "correct":
         await update.message.reply_text("✅ Ответ верный!")
+        session[user_id]["step"] += 1
         await ask_question(update, context)
 
     elif evaluation == "partial":
@@ -307,7 +305,7 @@ if __name__ == '__main__':
 
     # Отдельные команды для тренировки и жалоб
     app.add_handler(CommandHandler("start", start_training))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, process_answer))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, process_answer))  # Обработка ответов на вопросы
     app.add_handler(CommandHandler("stop", stop_training))
     app.add_handler(CommandHandler("error", report_error))
 
