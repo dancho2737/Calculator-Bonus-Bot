@@ -10,8 +10,8 @@ from telegram.ext import (ApplicationBuilder, CommandHandler, ContextTypes,
 import openai
 
 # === CONFIG ===
-BOT_TOKEN = "<your-telegram-bot-token>"
-API_KEY = "<your-openai-api-key>"
+BOT_TOKEN = "BOT_TOKEN"
+API_KEY = "openAI_key"
 openai.api_key = API_KEY
 DB_FILE = "data.db"
 SCENARIO_FILE = "scenarios.json"
