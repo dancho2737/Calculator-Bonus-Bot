@@ -245,7 +245,7 @@ if __name__ == '__main__':
     app.add_handler(conv)
     app.add_handler(CommandHandler("start", start_training))
     app.add_handler(CommandHandler("stop", stop_training))
-    app.add_handler(CommandHandler("ошибка", report_error))
+    app.add_handler(CommandHandler("error", report_error))
 
     app.run_polling()
 
