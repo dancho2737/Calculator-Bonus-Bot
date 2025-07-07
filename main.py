@@ -21,7 +21,7 @@ SCENARIO_FILE = "scenarios.json"
 RULES_FOLDER = "rules"
 PASSWORD = "starzbot"
 
-# === STATE ===
+# === STATES ===
 (
     PASSWORD_CHECK,
     REGISTRATION,
@@ -67,7 +67,7 @@ def init_db():
     conn.commit()
     conn.close()
 
-# === GLOBAL MEMORY ===
+# === GLOBAL SESSION MEMORY ===
 session = {}
 
 # === LOAD SCENARIOS AND RULES ===
@@ -117,7 +117,7 @@ def evaluate_answer(question, expected_skill, answer):
 
 # === HANDLERS ===
 
-# --- АВТОРИЗАЦИЯ /auth ---
+# -- /auth: старт авторизации
 async def auth_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_id in session and session[user_id].get("authenticated"):
@@ -127,6 +127,7 @@ async def auth_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Введите пароль для доступа:")
     return PASSWORD_CHECK
 
+# -- Проверка пароля
 async def password_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     text = update.message.text.strip()
@@ -142,14 +143,16 @@ async def password_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Неверный пароль. Попробуйте снова:")
         return PASSWORD_CHECK
 
+# -- Обработка кнопок регистрации/входа
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     user_id = query.from_user.id
-    session[user_id]["action"] = query.data  # register или login
+    session[user_id]["action"] = query.data  # 'register' или 'login'
     await query.message.reply_text("Введите логин:")
     return LOGIN
 
+# -- Обработка логина и пароля
 async def login_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     text = update.message.text.strip()
@@ -186,14 +189,13 @@ async def login_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.close()
     return ConversationHandler.END
 
-# --- НАЧАЛО ТРЕНИРОВКИ /start ---
+# -- /start: начало тренировки
 async def start_training(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_id not in session or not session[user_id].get("authenticated"):
         await update.message.reply_text("Сначала авторизуйтесь через /auth.")
-        return
+        return ConversationHandler.END
 
-    # Инициализируем параметры тренировки
     session[user_id]["score"] = {"correct": 0, "partial": 0, "incorrect": 0}
     session[user_id]["step"] = 0
     session[user_id]["scenario"] = load_scenarios()
@@ -201,6 +203,7 @@ async def start_training(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await ask_question(update, context)
     return AWAITING_ANSWER
 
+# -- Задать вопрос
 async def ask_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     index = session[user_id]["step"]
@@ -213,7 +216,7 @@ async def ask_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
     question = scenario[index]["question"]
     await update.message.reply_text(f"Вопрос: {question}")
 
-# --- ОБРАБОТКА ОТВЕТОВ ---
+# -- Обработка ответов оператора
 async def process_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     scenario = session[user_id]["scenario"]
@@ -225,7 +228,7 @@ async def process_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     evaluation = result.get("evaluation", "incorrect")
     grammar = result.get("grammar_issues", "")
 
-    # Логирование результата
+    # Логируем в базу
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute("INSERT INTO logs (user_id, question, answer, evaluation, grammar_issues) VALUES (?, ?, ?, ?, ?)",
@@ -233,7 +236,7 @@ async def process_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.commit()
     conn.close()
 
-    # Обновляем счетчики в сессии
+    # Обновляем счётчик в сессии
     session[user_id]["score"].setdefault(evaluation, 0)
     session[user_id]["score"][evaluation] += 1
 
@@ -243,14 +246,12 @@ async def process_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("✅ Ответ верный!")
         session[user_id]["step"] += 1
         await ask_question(update, context)
-
     elif evaluation == "partial":
         await update.message.reply_text("🟡 Ответ частично верный. Попробуйте дополнить.")
-
     else:
         await update.message.reply_text("❌ Неверный ответ. Попробуйте снова, уточните детали.")
 
-# --- ЗАВЕРШЕНИЕ ТРЕНИРОВКИ /stop ---
+# -- /stop: завершение тренировки и вывод статистики
 async def stop_training(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     score = session.get(user_id, {}).get("score", {})
@@ -259,8 +260,9 @@ async def stop_training(update: Update, context: ContextTypes.DEFAULT_TYPE):
            f"🟡 Частично верных: {score.get('partial', 0)}\n"
            f"❌ Неверных: {score.get('incorrect', 0)}")
     await update.message.reply_text(msg)
+    return ConversationHandler.END
 
-# --- ЖАЛОБА НА ОЦЕНКУ /error ---
+# -- /error: жалоба на неверную оценку ИИ
 async def report_error(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     last = session.get(user_id, {}).get("last")
@@ -274,28 +276,29 @@ async def report_error(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.commit()
     conn.close()
     await update.message.reply_text("Жалоба отправлена. Спасибо!")
+    return ConversationHandler.END
 
 # === MAIN ===
 if __name__ == '__main__':
     init_db()
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    # ConversationHandler для авторизации
     conv = ConversationHandler(
-        entry_points=[CommandHandler("auth", auth_start)],
+        entry_points=[
+            CommandHandler("auth", auth_start),
+            CommandHandler("start", start_training),
+        ],
         states={
             PASSWORD_CHECK: [MessageHandler(filters.TEXT & ~filters.COMMAND, password_check)],
             REGISTRATION: [CallbackQueryHandler(button_handler)],
             LOGIN: [MessageHandler(filters.TEXT & ~filters.COMMAND, login_handler)],
+            AWAITING_ANSWER: [MessageHandler(filters.TEXT & ~filters.COMMAND, process_answer)],
         },
-        fallbacks=[]
+        fallbacks=[
+            CommandHandler("stop", stop_training),
+            CommandHandler("error", report_error)
+        ]
     )
 
     app.add_handler(conv)
-
-    # Отдельные команды для тренировки и жалоб
-    app.add_handler(CommandHandler("start", start_training))
-    app.add_handler(CommandHandler("stop", stop_training))
-    app.add_handler(CommandHandler("error", report_error))
-
     app.run_polling()
