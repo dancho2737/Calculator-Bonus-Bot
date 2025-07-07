@@ -19,7 +19,6 @@ openai.api_key = API_KEY
 
 DB_FILE = "data.db"
 SCENARIO_FILE = "scenarios.json"
-RULES_FOLDER = "rules"
 PASSWORD = "starzbot"
 
 # === STATE ===
@@ -71,41 +70,29 @@ def init_db():
 # === GLOBAL MEMORY ===
 session = {}
 
-# === LOAD SCENARIOS AND RULES ===
+# === LOAD SCENARIOS ===
 def load_scenarios():
     with open(SCENARIO_FILE, encoding='utf-8') as f:
         data = json.load(f)
     random.shuffle(data)  # Перемешиваем список вопросов для рандома
     return data
 
-def load_rules():
-    all_rules = []
-    for filename in os.listdir(RULES_FOLDER):
-        path = os.path.join(RULES_FOLDER, filename)
-        if os.path.isfile(path):
-            with open(path, encoding='utf-8') as f:
-                all_rules.append(f.read())
-    return "\n".join(all_rules)
-
-RULE_TEXT = load_rules()
-
 # === AI EVALUATION ===
 def evaluate_answer(question, expected_skill, answer):
     prompt = f"""
-Вопрос оператора: {question}
-Навык, который оценивается: {expected_skill}
+Ты — ассистент, оценивающий ответ оператора по вопросу:
+
+Вопрос: {question}
+Навык: {expected_skill}
 Ответ оператора: {answer}
 
-Оцени ответ по следующим критериям:
-1. Правильный
-2. Правильный, но неполный
-3. Неправильный
+Оцени ответ так:
+- correct — если ответ полный и правильный,
+- partial — если ответ частично правильный,
+- incorrect — если ответ неверный.
 
-Также сравни ответ с внутренними правилами поддержки:
-{RULE_TEXT[:5000]}
-
-Ответь строго в формате JSON:
-{{"evaluation": "correct|partial|incorrect", "reason": "...", "grammar_issues": "..."}}
+Ответь только JSON с полями evaluation, reason и grammar_issues, например:
+{{"evaluation": "correct", "reason": "Ответ правильный и вежливый.", "grammar_issues": "Нет"}}
 """
     try:
         response = openai.ChatCompletion.create(
@@ -116,8 +103,8 @@ def evaluate_answer(question, expected_skill, answer):
         logger.info(f"OpenAI raw response: {content}")
         result = json.loads(content)
     except Exception as e:
-        logger.error(f"Ошибка парсинга ответа ИИ или вызова OpenAI: {e}")
-        result = {"evaluation": "incorrect", "reason": "Ошибка анализа ответа ИИ", "grammar_issues": ""}
+        logger.error(f"Ошибка при вызове OpenAI или парсинге JSON: {e}")
+        result = {"evaluation": "incorrect", "reason": "Ошибка анализа ответа", "grammar_issues": ""}
     return result
 
 # === HANDLERS ===
@@ -290,6 +277,7 @@ if __name__ == '__main__':
     init_db()
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
+    # ConversationHandler для авторизации
     conv = ConversationHandler(
         entry_points=[CommandHandler("auth", auth_start)],
         states={
@@ -302,8 +290,9 @@ if __name__ == '__main__':
 
     app.add_handler(conv)
 
+    # Отдельные команды для тренировки и жалоб
     app.add_handler(CommandHandler("start", start_training))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, process_answer))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, process_answer))  # Обработка ответов на вопросы
     app.add_handler(CommandHandler("stop", stop_training))
     app.add_handler(CommandHandler("error", report_error))
 
