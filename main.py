@@ -302,6 +302,6 @@ if __name__ == "__main__":
     application.add_handler(conv_handler)
     application.add_handler(CommandHandler("start", start_training))  # Запуск тренировки
     application.add_handler(CommandHandler("stop", stop_training))    # Остановка и статистика
-    application.add_handler(CommandHandler("ошибка", report_error))    # Жалоба на оценку
+    application.add_handler(CommandHandler("error", report_error))    # Жалоба на оценку
 
     application.run_polling()
