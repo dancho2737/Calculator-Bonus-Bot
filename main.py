@@ -13,8 +13,8 @@ from telegram.ext import (
 import openai
 
 # === CONFIG ===
-BOT_TOKEN = os.environ["BOT_TOKEN"]
-API_KEY = os.environ["OPENAI_KEY"]
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
+API_KEY = os.environ.get("OPENAI_KEY")
 openai.api_key = API_KEY
 
 DB_FILE = "data.db"
@@ -25,10 +25,11 @@ PASSWORD = "starzbot"
 # === STATE ===
 (
     PASSWORD_CHECK,
-    REGISTRATION,
+    REGISTRATION_CHOICE,
     LOGIN,
+    REGISTRATION,
     AWAITING_ANSWER,
-) = range(4)
+) = range(5)
 
 # === LOGGER ===
 logging.basicConfig(level=logging.INFO)
@@ -42,7 +43,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS users (
             user_id INTEGER PRIMARY KEY,
             username TEXT,
-            login TEXT,
+            login TEXT UNIQUE,
             password TEXT
         )
     ''')
@@ -125,12 +126,88 @@ def evaluate_answer(question, expected_skill, category, answer):
         result = {"evaluation": "incorrect", "reason": "Ошибка анализа ИИ", "grammar_issues": "", "correct_answer": ""}
     return result
 
-# === HANDLERS ===
+# === AUTHORIZATION HANDLERS ===
 
-# Здесь нужно добавить или импортировать твои обработчики авторизации /auth,
-# регистрации и логина. В этом примере они отсутствуют — добавь их по необходимости.
+async def auth_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    if session.get(user_id, {}).get("authenticated"):
+        await update.message.reply_text("Вы уже авторизованы. Введите /start для начала тренировки.")
+        return ConversationHandler.END
+    session[user_id] = {"authenticated": False}
+    await update.message.reply_text("Введите пароль для доступа:")
+    return PASSWORD_CHECK
 
-# --- НАЧАЛО ТРЕНИРОВКИ /start ---
+async def check_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    text = update.message.text.strip()
+    if text == PASSWORD:
+        keyboard = [
+            [InlineKeyboardButton("Зарегистрироваться", callback_data='register')],
+            [InlineKeyboardButton("Войти", callback_data='login')]
+        ]
+        await update.message.reply_text("Пароль верен. Выберите действие:",
+                                        reply_markup=InlineKeyboardMarkup(keyboard))
+        return REGISTRATION_CHOICE
+    else:
+        await update.message.reply_text("Неверный пароль. Попробуйте снова:")
+        return PASSWORD_CHECK
+
+async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    user_id = query.from_user.id
+    session[user_id]["action"] = query.data  # 'register' или 'login'
+    await query.message.reply_text("Введите логин:")
+    return LOGIN
+
+async def login_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    text = update.message.text.strip()
+    state = session[user_id]
+
+    if "login" not in state:
+        state["login"] = text
+        await update.message.reply_text("Введите пароль:")
+        return LOGIN
+
+    login, password = state["login"], text
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+
+    if state["action"] == "register":
+        c.execute("SELECT 1 FROM users WHERE login = ?", (login,))
+        if c.fetchone():
+            await update.message.reply_text("Такой логин уже существует, попробуйте другой.")
+            conn.close()
+            return LOGIN
+        c.execute("INSERT INTO users (user_id, username, login, password) VALUES (?, ?, ?, ?)",
+                  (user_id, update.effective_user.username, login, password))
+        conn.commit()
+        await update.message.reply_text("Регистрация прошла успешно! Введите /start для начала тренировки.")
+    else:
+        c.execute("SELECT * FROM users WHERE login = ? AND password = ?", (login, password))
+        if not c.fetchone():
+            await update.message.reply_text("Неверный логин или пароль. Попробуйте снова.")
+            conn.close()
+            return LOGIN
+        await update.message.reply_text("Успешный вход! Введите /start для начала тренировки.")
+
+    session[user_id]["authenticated"] = True
+    conn.close()
+    return ConversationHandler.END
+
+auth_conv = ConversationHandler(
+    entry_points=[CommandHandler("auth", auth_start)],
+    states={
+        PASSWORD_CHECK: [MessageHandler(filters.TEXT & ~filters.COMMAND, check_password)],
+        REGISTRATION_CHOICE: [CallbackQueryHandler(button_handler)],
+        LOGIN: [MessageHandler(filters.TEXT & ~filters.COMMAND, login_handler)],
+    },
+    fallbacks=[]
+)
+
+# === TRAINING HANDLERS ===
+
 async def start_training(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_id not in session or not session[user_id].get("authenticated"):
@@ -159,13 +236,12 @@ async def ask_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def process_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
+    answer = update.message.text.strip()
 
-    # Проверка, что пользователь начал тренировку и есть текущий вопрос
     if user_id not in session or "current" not in session[user_id]:
-        await update.message.reply_text("Сначала начните тренировку командой /start.")
+        await update.message.reply_text("Начните тренировку командой /start.")
         return
 
-    answer = update.message.text.strip()
     entry = session[user_id]["current"]
 
     result = evaluate_answer(entry["question"], entry["expected_skill"], entry["category"], answer)
@@ -174,12 +250,7 @@ async def process_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     grammar = result.get("grammar_issues", "")
     correct_answer = result.get("correct_answer", "")
 
-    session[user_id]["last"] = {
-        "question": entry["question"],
-        "answer": answer,
-        "evaluation": evaluation,
-        "correct_answer": correct_answer
-    }
+    session[user_id]["last"] = {"question": entry["question"], "answer": answer, "evaluation": evaluation, "correct_answer": correct_answer}
 
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -238,10 +309,7 @@ if __name__ == '__main__':
     init_db()
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    # Если у тебя есть отдельный ConversationHandler для авторизации,
-    # подключи его здесь, например:
-    # from auth_handlers import conv_handler as auth_conv
-    # app.add_handler(auth_conv)
+    app.add_handler(auth_conv)
 
     app.add_handler(CommandHandler("start", start_training))
     app.add_handler(CommandHandler("stop", stop_training))
