@@ -136,7 +136,7 @@ if __name__ == '__main__':
 
     # ConversationHandler для авторизации
     conv = ConversationHandler(
-        entry_points=[CommandHandler("auth", auth_start)],
+    entry_points=[CommandHandler("auth", auth_start)],
         states={
             PASSWORD_CHECK: [MessageHandler(filters.TEXT & ~filters.COMMAND, password_check)],
             REGISTRATION: [CallbackQueryHandler(button_handler)],
