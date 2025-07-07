@@ -4,17 +4,17 @@ import json
 import os
 import random
 
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update
 from telegram.ext import (
     ApplicationBuilder, CommandHandler, ContextTypes,
-    MessageHandler, filters, CallbackQueryHandler, ConversationHandler
+    MessageHandler, filters, ConversationHandler
 )
 
 import openai
 
 # === CONFIG ===
-BOT_TOKEN = os.environ.get("BOT_TOKEN")
-API_KEY = os.environ.get("OPENAI_KEY")
+BOT_TOKEN = os.environ["BOT_TOKEN"]
+API_KEY = os.environ["OPENAI_KEY"]
 openai.api_key = API_KEY
 
 DB_FILE = "data.db"
@@ -22,13 +22,13 @@ SCENARIO_FILE = "scenarios.json"
 RULES_FOLDER = "rules"
 PASSWORD = "starzbot"
 
-# === STATE ===
+# === STATES ===
 (
     PASSWORD_CHECK,
-    REGISTRATION_CHOICE,
-    LOGIN,
     REGISTRATION,
+    LOGIN,
     AWAITING_ANSWER,
+    AWAITING_FOLLOWUP_ANSWER,
 ) = range(5)
 
 # === LOGGER ===
@@ -43,7 +43,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS users (
             user_id INTEGER PRIMARY KEY,
             username TEXT,
-            login TEXT UNIQUE,
+            login TEXT,
             password TEXT
         )
     ''')
@@ -109,9 +109,11 @@ def evaluate_answer(question, expected_skill, category, answer):
   "evaluation": "correct|partial|incorrect",
   "reason": "...",
   "grammar_issues": "...",
-  "correct_answer": "..."
+  "correct_answer": "...",
+  "follow_up_question": "..."
 }}
 Если ответ почти верный, но незначительно отличается от корректного, оценивай как "correct".
+Если ответ неверный или частично верный — предложи уточняющий вопрос, чтобы помочь пользователю лучше ответить.
 """
     try:
         response = openai.ChatCompletion.create(
@@ -123,90 +125,10 @@ def evaluate_answer(question, expected_skill, category, answer):
         result = json.loads(content)
     except Exception as e:
         logger.error(f"Ошибка OpenAI: {e}")
-        result = {"evaluation": "incorrect", "reason": "Ошибка анализа ИИ", "grammar_issues": "", "correct_answer": ""}
+        result = {"evaluation": "incorrect", "reason": "Ошибка анализа ИИ", "grammar_issues": "", "correct_answer": "", "follow_up_question": ""}
     return result
 
-# === AUTHORIZATION HANDLERS ===
-
-async def auth_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    if session.get(user_id, {}).get("authenticated"):
-        await update.message.reply_text("Вы уже авторизованы. Введите /start для начала тренировки.")
-        return ConversationHandler.END
-    session[user_id] = {"authenticated": False}
-    await update.message.reply_text("Введите пароль для доступа:")
-    return PASSWORD_CHECK
-
-async def check_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    text = update.message.text.strip()
-    if text == PASSWORD:
-        keyboard = [
-            [InlineKeyboardButton("Зарегистрироваться", callback_data='register')],
-            [InlineKeyboardButton("Войти", callback_data='login')]
-        ]
-        await update.message.reply_text("Пароль верен. Выберите действие:",
-                                        reply_markup=InlineKeyboardMarkup(keyboard))
-        return REGISTRATION_CHOICE
-    else:
-        await update.message.reply_text("Неверный пароль. Попробуйте снова:")
-        return PASSWORD_CHECK
-
-async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    user_id = query.from_user.id
-    session[user_id]["action"] = query.data  # 'register' или 'login'
-    await query.message.reply_text("Введите логин:")
-    return LOGIN
-
-async def login_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    text = update.message.text.strip()
-    state = session[user_id]
-
-    if "login" not in state:
-        state["login"] = text
-        await update.message.reply_text("Введите пароль:")
-        return LOGIN
-
-    login, password = state["login"], text
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-
-    if state["action"] == "register":
-        c.execute("SELECT 1 FROM users WHERE login = ?", (login,))
-        if c.fetchone():
-            await update.message.reply_text("Такой логин уже существует, попробуйте другой.")
-            conn.close()
-            return LOGIN
-        c.execute("INSERT INTO users (user_id, username, login, password) VALUES (?, ?, ?, ?)",
-                  (user_id, update.effective_user.username, login, password))
-        conn.commit()
-        await update.message.reply_text("Регистрация прошла успешно! Введите /start для начала тренировки.")
-    else:
-        c.execute("SELECT * FROM users WHERE login = ? AND password = ?", (login, password))
-        if not c.fetchone():
-            await update.message.reply_text("Неверный логин или пароль. Попробуйте снова.")
-            conn.close()
-            return LOGIN
-        await update.message.reply_text("Успешный вход! Введите /start для начала тренировки.")
-
-    session[user_id]["authenticated"] = True
-    conn.close()
-    return ConversationHandler.END
-
-auth_conv = ConversationHandler(
-    entry_points=[CommandHandler("auth", auth_start)],
-    states={
-        PASSWORD_CHECK: [MessageHandler(filters.TEXT & ~filters.COMMAND, check_password)],
-        REGISTRATION_CHOICE: [CallbackQueryHandler(button_handler)],
-        LOGIN: [MessageHandler(filters.TEXT & ~filters.COMMAND, login_handler)],
-    },
-    fallbacks=[]
-)
-
-# === TRAINING HANDLERS ===
+# === HANDLERS ===
 
 async def start_training(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -217,6 +139,8 @@ async def start_training(update: Update, context: ContextTypes.DEFAULT_TYPE):
     session[user_id]["score"] = {"correct": 0, "partial": 0, "incorrect": 0}
     session[user_id]["step"] = 0
     session[user_id]["scenario"] = load_scenarios()
+    session[user_id]["followup_mode"] = False
+    session[user_id]["followup_tries"] = 0
 
     await ask_question(update, context)
     return AWAITING_ANSWER
@@ -232,6 +156,8 @@ async def ask_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     entry = scenario[index]
     session[user_id]["current"] = entry
+    session[user_id]["followup_mode"] = False
+    session[user_id]["followup_tries"] = 0
     await update.message.reply_text(f"Вопрос: {entry['question']}")
 
 async def process_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -239,19 +165,29 @@ async def process_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     answer = update.message.text.strip()
 
     if user_id not in session or "current" not in session[user_id]:
-        await update.message.reply_text("Начните тренировку командой /start.")
+        await update.message.reply_text("Пожалуйста, начните тренировку с команды /start.")
         return
 
     entry = session[user_id]["current"]
+    followup_mode = session[user_id].get("followup_mode", False)
+    followup_tries = session[user_id].get("followup_tries", 0)
 
+    # Оцениваем ответ
     result = evaluate_answer(entry["question"], entry["expected_skill"], entry["category"], answer)
     evaluation = result.get("evaluation", "incorrect")
     reason = result.get("reason", "")
     grammar = result.get("grammar_issues", "")
     correct_answer = result.get("correct_answer", "")
+    follow_up_question = result.get("follow_up_question", "")
 
-    session[user_id]["last"] = {"question": entry["question"], "answer": answer, "evaluation": evaluation, "correct_answer": correct_answer}
+    session[user_id]["last"] = {
+        "question": entry["question"],
+        "answer": answer,
+        "evaluation": evaluation,
+        "correct_answer": correct_answer
+    }
 
+    # Записываем в базу
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute("""
@@ -261,16 +197,32 @@ async def process_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.commit()
     conn.close()
 
+    # Обновляем счётчик
     session[user_id]["score"][evaluation] += 1
 
     if evaluation == "correct":
         await update.message.reply_text("✅ Ответ засчитан как верный!")
         session[user_id]["step"] += 1
+        session[user_id]["followup_mode"] = False
+        session[user_id]["followup_tries"] = 0
         await ask_question(update, context)
-    elif evaluation == "partial":
-        await update.message.reply_text("🟡 Ответ частично верный. Попробуйте дополнить.")
     else:
-        await update.message.reply_text("❌ Ответ неверный. Попробуйте снова или введите /answer, чтобы посмотреть правильный.")
+        # Если мы уже в режиме уточнений — считаем попытку
+        if followup_mode:
+            session[user_id]["followup_tries"] += 1
+            if session[user_id]["followup_tries"] >= 3:
+                await update.message.reply_text(f"❌ Всё равно неверно. Правильный ответ:\n{correct_answer}")
+                session[user_id]["step"] += 1
+                session[user_id]["followup_mode"] = False
+                session[user_id]["followup_tries"] = 0
+                await ask_question(update, context)
+            else:
+                await update.message.reply_text(f"❌ Ответ всё ещё неверный. Попробуйте иначе.\nУточнение: {follow_up_question}")
+        else:
+            # Включаем режим уточнений
+            session[user_id]["followup_mode"] = True
+            session[user_id]["followup_tries"] = 1
+            await update.message.reply_text(f"🟡 Ответ неверный или частично верный.\nУточняющий вопрос: {follow_up_question}")
 
 async def send_correct_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -309,6 +261,7 @@ if __name__ == '__main__':
     init_db()
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
+    from auth_handlers import conv_handler as auth_conv
     app.add_handler(auth_conv)
 
     app.add_handler(CommandHandler("start", start_training))
