@@ -195,8 +195,7 @@ async def send_correct_answer(update: Update, context: ContextTypes.DEFAULT_TYPE
         await update.message.reply_text("Нет ответа для показа.")
         return
     correct = last.get("correct_answer", "Нет правильного ответа.")
-    await update.message.reply_text(f"Правильный ответ:
-{correct}")
+   await update.message.reply_text(f"Правильный ответ:\n{correct}")
 
 async def stop_training(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
