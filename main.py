@@ -19,6 +19,7 @@ openai.api_key = API_KEY
 
 DB_FILE = "data.db"
 SCENARIO_FILE = "scenarios.json"
+RULES_FOLDER = "rules"
 PASSWORD = "starzbot"
 
 # === STATE ===
@@ -52,7 +53,8 @@ def init_db():
             question TEXT,
             answer TEXT,
             evaluation TEXT,
-            grammar_issues TEXT
+            grammar_issues TEXT,
+            correct_answer TEXT
         )
     ''')
     c.execute('''
@@ -70,29 +72,45 @@ def init_db():
 # === GLOBAL MEMORY ===
 session = {}
 
-# === LOAD SCENARIOS ===
+# === LOAD SCENARIOS AND RULES ===
 def load_scenarios():
     with open(SCENARIO_FILE, encoding='utf-8') as f:
         data = json.load(f)
-    random.shuffle(data)  # Перемешиваем список вопросов для рандома
+    random.shuffle(data)
     return data
 
-# === AI EVALUATION ===
-def evaluate_answer(question, expected_skill, answer):
-    prompt = f"""
-Ты — ассистент, оценивающий ответ оператора по вопросу:
+def load_rules():
+    rules = {}
+    for filename in os.listdir(RULES_FOLDER):
+        if filename.endswith(".txt"):
+            category = filename.replace(".txt", "")
+            path = os.path.join(RULES_FOLDER, filename)
+            with open(path, encoding='utf-8') as f:
+                rules[category] = f.read()
+    return rules
 
-Вопрос: {question}
+RULES_BY_CATEGORY = load_rules()
+
+# === AI EVALUATION ===
+def evaluate_answer(question, expected_skill, category, answer):
+    rules_text = RULES_BY_CATEGORY.get(category, "")[:3000]
+    prompt = f"""
+Вопрос оператора: {question}
 Навык: {expected_skill}
+Категория: {category}
 Ответ оператора: {answer}
 
-Оцени ответ так:
-- correct — если ответ полный и правильный,
-- partial — если ответ частично правильный,
-- incorrect — если ответ неверный.
+Правила:
+{rules_text}
 
-Ответь только JSON с полями evaluation, reason и grammar_issues, например:
-{{"evaluation": "correct", "reason": "Ответ правильный и вежливый.", "grammar_issues": "Нет"}}
+Ответь строго в формате JSON:
+{{
+  "evaluation": "correct|partial|incorrect",
+  "reason": "...",
+  "grammar_issues": "...",
+  "correct_answer": "..."
+}}
+Если ответ почти верный, но незначительно отличается от корректного, оценивай как "correct".
 """
     try:
         response = openai.ChatCompletion.create(
@@ -103,80 +121,12 @@ def evaluate_answer(question, expected_skill, answer):
         logger.info(f"OpenAI raw response: {content}")
         result = json.loads(content)
     except Exception as e:
-        logger.error(f"Ошибка при вызове OpenAI или парсинге JSON: {e}")
-        result = {"evaluation": "incorrect", "reason": "Ошибка анализа ответа", "grammar_issues": ""}
+        logger.error(f"Ошибка OpenAI: {e}")
+        result = {"evaluation": "incorrect", "reason": "Ошибка анализа ИИ", "grammar_issues": "", "correct_answer": ""}
     return result
 
 # === HANDLERS ===
-
-# --- АВТОРИЗАЦИЯ /auth ---
-async def auth_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    if user_id in session and session[user_id].get("authenticated"):
-        await update.message.reply_text("Вы уже авторизованы! Введите /start для начала тренировки.")
-        return ConversationHandler.END
-    session[user_id] = {"authenticated": False}
-    await update.message.reply_text("Введите пароль для доступа:")
-    return PASSWORD_CHECK
-
-async def password_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    text = update.message.text.strip()
-    if text == PASSWORD:
-        keyboard = [
-            [InlineKeyboardButton("Зарегистрироваться", callback_data='register')],
-            [InlineKeyboardButton("Войти", callback_data='login')]
-        ]
-        await update.message.reply_text("Пароль верен. Выберите действие:",
-                                        reply_markup=InlineKeyboardMarkup(keyboard))
-        return REGISTRATION
-    else:
-        await update.message.reply_text("Неверный пароль. Попробуйте снова:")
-        return PASSWORD_CHECK
-
-async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    user_id = query.from_user.id
-    session[user_id]["action"] = query.data  # register или login
-    await query.message.reply_text("Введите логин:")
-    return LOGIN
-
-async def login_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    text = update.message.text.strip()
-    state = session[user_id]
-
-    if "login" not in state:
-        state["login"] = text
-        await update.message.reply_text("Введите пароль:")
-        return LOGIN
-
-    login, password = state["login"], text
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-
-    if state["action"] == "register":
-        c.execute("SELECT 1 FROM users WHERE login = ?", (login,))
-        if c.fetchone():
-            await update.message.reply_text("Такой логин уже существует, попробуйте другой.")
-            conn.close()
-            return LOGIN
-        c.execute("INSERT INTO users (user_id, username, login, password) VALUES (?, ?, ?, ?)",
-                  (user_id, update.effective_user.username, login, password))
-        conn.commit()
-        await update.message.reply_text("Регистрация прошла успешно! Введите /start для начала тренировки.")
-    else:
-        c.execute("SELECT * FROM users WHERE login = ? AND password = ?", (login, password))
-        if not c.fetchone():
-            await update.message.reply_text("Неверный логин или пароль. Попробуйте снова.")
-            conn.close()
-            return LOGIN
-        await update.message.reply_text("Успешный вход! Введите /start для начала тренировки.")
-
-    session[user_id]["authenticated"] = True
-    conn.close()
-    return ConversationHandler.END
+# (Оставляем авторизацию и регистрацию без изменений)
 
 # --- НАЧАЛО ТРЕНИРОВКИ /start ---
 async def start_training(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -185,7 +135,6 @@ async def start_training(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Сначала авторизуйтесь через /auth.")
         return
 
-    # Инициализируем параметры тренировки
     session[user_id]["score"] = {"correct": 0, "partial": 0, "incorrect": 0}
     session[user_id]["step"] = 0
     session[user_id]["scenario"] = load_scenarios()
@@ -202,52 +151,53 @@ async def ask_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Тренировка завершена. Напишите /stop для просмотра статистики.")
         return ConversationHandler.END
 
-    question = scenario[index]["question"]
-    await update.message.reply_text(f"Вопрос: {question}")
+    entry = scenario[index]
+    session[user_id]["current"] = entry
+    await update.message.reply_text(f"Вопрос: {entry['question']}")
 
-# --- ОБРАБОТКА ОТВЕТОВ ---
 async def process_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     answer = update.message.text.strip()
-    logger.info(f"User {user_id} ответил: {answer}")
+    entry = session[user_id].get("current")
 
-    scenario = session[user_id]["scenario"]
-    index = session[user_id]["step"]
-    entry = scenario[index]
-
-    result = evaluate_answer(entry["question"], entry["expected_skill"], answer)
+    result = evaluate_answer(entry["question"], entry["expected_skill"], entry["category"], answer)
     evaluation = result.get("evaluation", "incorrect")
     reason = result.get("reason", "")
     grammar = result.get("grammar_issues", "")
+    correct_answer = result.get("correct_answer", "")
 
-    logger.info(f"Оценка ИИ: {evaluation}, причина: {reason}")
+    session[user_id]["last"] = {"question": entry["question"], "answer": answer, "evaluation": evaluation, "correct_answer": correct_answer}
 
-    # Логируем в базу
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute(
-        "INSERT INTO logs (user_id, question, answer, evaluation, grammar_issues) VALUES (?, ?, ?, ?, ?)",
-        (user_id, entry["question"], answer, evaluation, grammar)
-    )
+    c.execute("""
+        INSERT INTO logs (user_id, question, answer, evaluation, grammar_issues, correct_answer)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (user_id, entry["question"], answer, evaluation, grammar, correct_answer))
     conn.commit()
     conn.close()
 
-    session[user_id]["score"].setdefault(evaluation, 0)
     session[user_id]["score"][evaluation] += 1
-    session[user_id]["last"] = {"question": entry["question"], "answer": answer, "evaluation": evaluation}
 
     if evaluation == "correct":
-        await update.message.reply_text("✅ Ответ верный!")
+        await update.message.reply_text("✅ Ответ засчитан как верный!")
         session[user_id]["step"] += 1
         await ask_question(update, context)
-
     elif evaluation == "partial":
         await update.message.reply_text("🟡 Ответ частично верный. Попробуйте дополнить.")
-
     else:
-        await update.message.reply_text("❌ Неверный ответ. Попробуйте снова, уточните детали.")
+        await update.message.reply_text("❌ Ответ неверный. Попробуйте снова или введите /answer, чтобы посмотреть правильный.")
 
-# --- ЗАВЕРШЕНИЕ ТРЕНИРОВКИ /stop ---
+async def send_correct_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    last = session.get(user_id, {}).get("last")
+    if not last:
+        await update.message.reply_text("Нет ответа для показа.")
+        return
+    correct = last.get("correct_answer", "Нет правильного ответа.")
+    await update.message.reply_text(f"Правильный ответ:
+{correct}")
+
 async def stop_training(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     score = session.get(user_id, {}).get("score", {})
@@ -257,7 +207,6 @@ async def stop_training(update: Update, context: ContextTypes.DEFAULT_TYPE):
            f"❌ Неверных: {score.get('incorrect', 0)}")
     await update.message.reply_text(msg)
 
-# --- ЖАЛОБА НА ОЦЕНКУ /error ---
 async def report_error(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     last = session.get(user_id, {}).get("last")
@@ -277,23 +226,13 @@ if __name__ == '__main__':
     init_db()
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    # ConversationHandler для авторизации
-    conv = ConversationHandler(
-        entry_points=[CommandHandler("auth", auth_start)],
-        states={
-            PASSWORD_CHECK: [MessageHandler(filters.TEXT & ~filters.COMMAND, password_check)],
-            REGISTRATION: [CallbackQueryHandler(button_handler)],
-            LOGIN: [MessageHandler(filters.TEXT & ~filters.COMMAND, login_handler)],
-        },
-        fallbacks=[]
-    )
+    from auth_handlers import conv_handler as auth_conv
+    app.add_handler(auth_conv)
 
-    app.add_handler(conv)
-
-    # Отдельные команды для тренировки и жалоб
     app.add_handler(CommandHandler("start", start_training))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, process_answer))  # Обработка ответов на вопросы
     app.add_handler(CommandHandler("stop", stop_training))
+    app.add_handler(CommandHandler("answer", send_correct_answer))
     app.add_handler(CommandHandler("error", report_error))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, process_answer))
 
     app.run_polling()
