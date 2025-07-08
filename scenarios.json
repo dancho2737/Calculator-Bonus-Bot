@@ -1,1091 +1,1827 @@
 [
   {
     "question": "Я закинул 150 000 сом за неделю. Где мой кэшбэк и бонусы?! Если не вернёте хоть что-то — вынесу всё в паблик!",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "aggressive",
-    "category": "BonusesAndPromotions",
-    "risk_level": "high"
+    "expected_answer": "Кэшбэк и бонусы начисляются согласно условиям программы лояльности. Пожалуйста, проверьте вашу статистику в профиле или обратитесь в поддержку для уточнения.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "Я не собираюсь давать вам свой номер! Я выиграл честно — дайте деньги! У вас и так все мои данные!",
-    "expected_skill": "Terms",
-    "tone": "demanding",
-    "category": "Terms",
-    "risk_level": "high"
+    "expected_answer": "Для вывода средств необходимо пройти верификацию, включая подтверждение номера. Это обязательное требование нашей KYC-политики.",
+    "category": "KYC.txt"
   },
   {
     "question": "Я не помню, какой бонус активировал, сколько нужно отыгрывать и почему баланс списали! Объясните нормально!",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "confused",
-    "category": "BonusesAndPromotions",
-    "risk_level": "medium"
+    "expected_answer": "Вы можете проверить активные бонусы и требования по отыгрышу в личном кабинете в разделе 'Бонусы'.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "Я играл в одну игру 3 дня — теперь она не даёт вообще! Вы всё подкрутили! Я это запишу и в лицензию отправлю!",
-    "expected_skill": "Games",
-    "tone": "accusatory",
-    "category": "Games",
-    "risk_level": "high"
+    "expected_answer": "Все игры используют лицензированный генератор случайных чисел (RNG), который обеспечивает честность. Результаты не зависят от казино.",
+    "category": "Games.txt"
   },
   {
     "question": "Вы охренели?! Где мои деньги?! Я жду уже 2 часа! Что за бардак у вас?!",
-    "expected_skill": "Terms",
-    "tone": "aggressive",
-    "category": "Terms",
-    "risk_level": "high"
+    "expected_answer": "Пожалуйста, укажите ID транзакции. Сроки вывода зависят от платёжной системы и обычно занимают до 24 часов.",
+    "category": "Terms.txt"
   },
   {
     "question": "Я всё проиграл. Помогите мне... Я не могу остановиться. Заблокируйте меня и скажите, что делать...",
-    "expected_skill": "AML",
-    "tone": "desperate",
-    "category": "AML",
-    "risk_level": "high"
+    "expected_answer": "Мы не можем временно или навсегда ограничить ваш доступ к аккаунту. рекомендуем обратиться за поддержкой на странице 'Ответственная игра'.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Вы не принимаете мой документ! Это единственный, что у меня есть! Почему вы не верите мне?!",
-    "expected_skill": "KYC",
-    "tone": "frustrated",
-    "category": "KYC",
-    "risk_level": "medium"
+    "expected_answer": "Пожалуйста, отправьте скан документа заново. Мы принимаем только те, что соответствуют требованиям KYC. Список допустимых документов — на сайте.",
+    "category": "KYC.txt"
   },
   {
     "question": "Я написал в поддержку ещё вчера — тишина! Какой у вас 24/7, если все молчат?!",
-    "expected_skill": "Other",
-    "tone": "angry",
-    "category": "Other",
-    "risk_level": "medium"
+    "expected_answer": "Нам жаль, что вы столкнулись с задержкой. Мы стараемся отвечать максимально быстро. Повторно напишите в чат или на почту — мы ответим в ближайшее время.",
+    "category": "Other.txt"
   },
   {
     "question": "Вывод ушёл, а деньги на карту не пришли! Где мои деньги?! Вы меня обманываете?!",
-    "expected_skill": "Terms",
-    "tone": "accusatory",
-    "category": "Terms",
-    "risk_level": "high"
+    "expected_answer": "Пожалуйста, проверьте статус заявки в истории транзакций. Некоторые банки обрабатывают платежи до 24 часов.",
+    "category": "Terms.txt"
   },
   {
     "question": "Я только что выиграл джекпот, но деньги не пришли. Почему?!",
-    "expected_skill": "Terms",
-    "tone": "confused",
-    "category": "Terms",
-    "risk_level": "high"
+    "expected_answer": "Поздравляем! Пожалуйста, подождите — выплаты по джекпотам могут обрабатываться вручную и занимать немного больше времени.",
+    "category": "Games.txt"
   },
   {
     "question": "Я был пьян и не помню, как проиграл деньги. Верните, пожалуйста, всё обратно.",
-    "expected_skill": "Terms",
-    "tone": "pleading",
-    "category": "Terms",
-    "risk_level": "high"
+    "expected_answer": "Мы не возвращаем проигранные средства. Рекомендуем установить лимиты или активировать функцию самоблокировки в разделе 'Ответственная игра'.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Удалите мой аккаунт и все данные, я больше не хочу тут играть!",
-    "expected_skill": "Terms",
-    "tone": "firm",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Пожалуйста, отправьте официальный запрос через поддержку. Мы навсегда удалим ваш аккаунт и персональные данные.",
+    "category": "KYC.txt"
   },
   {
     "question": "Если поможешь обойти лимит — поделюсь выигрышем. Договоримся?",
-    "expected_skill": "Terms",
-    "tone": "suspicious",
-    "category": "Terms",
-    "risk_level": "critical"
+    "expected_answer": "Нарушение условий и попытки обхода системы запрещены. За такие предложения возможна блокировка аккаунта.",
+    "category": "Terms.txt"
   },
   {
     "question": "У меня зависла игра, и она не показывает выигрыш! Что происходит?!",
-    "expected_skill": "Games",
-    "tone": "confused",
-    "category": "Games",
-    "risk_level": "medium"
+    "expected_answer": "Уточните название игры и примерное время — мы передадим информацию в технический отдел для проверки.",
+    "category": "Games.txt"
   },
   {
     "question": "Почему мой друг выигрывает больше, хотя мы играем в одну и ту же игру?",
-    "expected_skill": "Games",
-    "tone": "curious",
-    "category": "Games",
-    "risk_level": "low"
+    "expected_answer": "Результаты каждой игры определяются случайным образом. Шансы у всех игроков равны.",
+    "category": "Games.txt"
   },
   {
     "question": "Я уже договорился с админом по имени Алексей. Он обещал бонус! Где он?!",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "demanding",
-    "category": "BonusesAndPromotions",
-    "risk_level": "medium"
+    "expected_answer": "Все бонусы выдаются централизованно. Уточните, где вы общались и с кем — мы проверим информацию.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "Почему вы отменили мой бонус?! У меня есть видео, что всё было честно!",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "accusatory",
-    "category": "BonusesAndPromotions",
-    "risk_level": "high"
+    "expected_answer": "Бонус может быть отменён при нарушении условий. Пожалуйста, отправьте ваше видео — мы перепроверим.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "Вы меня троллите? Я уверен, что вы не человек, а бот. Это уже не смешно!",
-    "expected_skill": "Other",
-    "tone": "mocking",
-    "category": "Other",
-    "risk_level": "low"
+    "expected_answer": "Наша служба поддержки состоит как из людей, так и автоматизированных помощников. Мы готовы вам помочь.",
+    "category": "Other.txt"
   },
   {
     "question": "Моя жена узнала, что я тут играю! Удалите всё немедленно, чтобы она не нашла!",
-    "expected_skill": "Terms",
-    "tone": "urgent",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Мы можем удалить ваш аккаунт и все данные по официальному запросу через чат или почту.",
+    "category": "KYC.txt"
   },
   {
     "question": "Я хочу зарегистрироваться с вымышленными данными. Это точно не вызовет проблем?",
-    "expected_skill": "Terms",
-    "tone": "curious",
-    "category": "Terms",
-    "risk_level": "critical"
+    "expected_answer": "Регистрация с ложными данными запрещена и приведёт к блокировке аккаунта при верификации.",
+    "category": "Terms.txt"
   },
   {
     "question": "Я просто хочу пообщаться — вы человек или бот?",
-    "expected_skill": "Other",
-    "tone": "curious",
-    "category": "Other",
-    "risk_level": "low"
+    "expected_answer": "Вы общаетесь с представителем службы поддержки. Мы готовы ответить на любые ваши вопросы.",
+    "category": "Other.txt"
   },
   {
     "question": "Я вышла замуж и сменила фамилию. Обновите, пожалуйста, мои данные.",
-    "expected_skill": "Terms",
-    "tone": "polite",
-    "category": "Terms",
-    "risk_level": "low"
+    "expected_answer": "Пожалуйста, предоставьте новый документ с изменёнными данными — мы обновим информацию в вашем профиле.",
+    "category": "KYC.txt"
   },
   {
     "question": "Здравствуйте. Мой муж играет у вас без остановки! Пожалуйста, заблокируйте его аккаунт!",
-    "expected_skill": "AML",
-    "tone": "urgent",
-    "category": "AML",
-    "risk_level": "high"
+    "expected_answer": "К сожалению, мы можем заблокировать аккаунт только по запросу самого игрока. Вы можете предложить ему включить самоограничение.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Я не согласен с результатом игры. Могу ли я подать жалобу или апелляцию?",
-    "expected_skill": "Terms",
-    "tone": "polite",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Да, вы можете отправить обращение в поддержку. Мы передадим его на внутреннюю проверку.",
+    "category": "Games.txt"
   },
   {
     "question": "Как поставить лимит на депозит? Мне нужно ограничить себя на неделю или месяц.",
-    "expected_skill": "AML",
-    "tone": "polite",
-    "category": "AML",
-    "risk_level": "low"
+    "expected_answer": "Вы можете установить депозитные лимиты в разделе 'Ответственная игра' в личном кабинете.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Где можно посмотреть мою историю входов и игровые сессии?",
-    "expected_skill": "Terms",
-    "tone": "neutral",
-    "category": "Terms",
-    "risk_level": "low"
+    "expected_answer": "История входов и активностей доступна в вашем профиле, в разделе 'Безопасность' или 'История'.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Можно ли отправить выигрыш другому игроку? Просто перевести прямо на его аккаунт?",
-    "expected_skill": "Terms",
-    "tone": "curious",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Такая возможность не предусмотрена. Все выигрыши могут быть выведены только владельцем аккаунта.",
+    "category": "Terms.txt"
   },
   {
     "question": "Где посмотреть, сколько я проиграл за всё время? Есть такая статистика?",
-    "expected_skill": "Terms",
-    "tone": "curious",
-    "category": "Terms",
-    "risk_level": "low"
+    "expected_answer": "Вы можете найти информацию о проигрышах и выигрышах в разделе 'Ответственная игра' или 'История транзакций'.",
+    "category": "ResponsibleGaming.txt"
   },
   {
     "question": "Вы точно не подкручиваете игры? Я три дня в минусе подряд — это вообще нормально?!",
-    "expected_skill": "Games",
-    "tone": "accusatory",
-    "category": "Games",
-    "risk_level": "high"
+    "expected_answer": "Все игры лицензированы и используют RNG (генератор случайных чисел), который гарантирует честность результатов.",
+    "category": "Games.txt"
   },
   {
     "question": "Можно ли играть без полной верификации? Что мне будет доступно?",
-    "expected_skill": "KYC",
-    "tone": "curious",
-    "category": "KYC",
-    "risk_level": "medium"
+    "expected_answer": "Без верификации доступны только базовые функции. Для вывода средств и бонусов — полная верификация обязательна.",
+    "category": "KYC.txt"
   },
   {
     "question": "Как включить уведомления от казино? Ничего не приходит.",
-    "expected_skill": "Other",
-    "tone": "confused",
-    "category": "Other",
-    "risk_level": "low"
+    "expected_answer": "Проверьте настройки уведомлений в вашем профиле и убедитесь, что в браузере/приложении разрешены уведомления.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Я случайно закинул больше, чем хотел. Можете вернуть лишнее?",
-    "expected_skill": "Terms",
-    "tone": "polite",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Пожалуйста, свяжитесь с поддержкой как можно скорее. Мы проверим операцию и постараемся помочь, если это допустимо правилами.",
+    "category": "Terms.txt"
   },
   {
     "question": "У меня два аккаунта. Переведите, пожалуйста, деньги со старого на новый.",
-    "expected_skill": "Terms",
-    "tone": "polite",
-    "category": "Terms",
-    "risk_level": "critical"
+    "expected_answer": "Создание нескольких аккаунтов запрещено. Пожалуйста, обратитесь в поддержку — мы проверим ситуацию.",
+    "category": "Terms.txt"
   },
   {
     "question": "Я неделю не заходил, а деньги исчезли! Это точно не я играл!",
-    "expected_skill": "Terms",
-    "tone": "accusatory",
-    "category": "Terms",
-    "risk_level": "high"
+    "expected_answer": "Проверьте историю транзакций и входов. Если замечаете подозрительную активность — немедленно свяжитесь с поддержкой.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Хочу пообщаться с администрацией напрямую. Это возможно?",
-    "expected_skill": "Other",
-    "tone": "curious",
-    "category": "Other",
-    "risk_level": "low"
+    "expected_answer": "Вы можете оставить своё обращение в поддержке, и мы передадим его в соответствующий отдел.",
+    "category": "Other.txt"
   },
   {
     "question": "Можно пройти обучение, как правильно играть и отыгрывать бонусы?",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "polite",
-    "category": "BonusesAndPromotions",
-    "risk_level": "low"
+    "expected_answer": "Информацию по отыгрышу бонусов вы найдёте в разделе 'Бонусы и акции'. Также доступны обучающие статьи в блоге.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "Что такое RTP и как найти игры, где он выше?",
-    "expected_skill": "Games",
-    "tone": "curious",
-    "category": "Games",
-    "risk_level": "low"
+    "expected_answer": "RTP — это теоретическая отдача слота. Узнать её можно в описании игры или разделе 'Игры'.",
+    "category": "Games.txt"
   },
   {
     "question": "Как удалить историю моих игр? Не хочу, чтобы она сохранялась.",
-    "expected_skill": "Terms",
-    "tone": "polite",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "История игр сохраняется согласно политике безопасности и не может быть удалена.",
+    "category": "Terms.txt"
   },
   {
     "question": "Пришло уведомление о входе с другого устройства — это вы заходили?",
-    "expected_skill": "Terms",
-    "tone": "concerned",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Нет, мы не осуществляем входы от имени пользователей. Если вы не узнаёте вход — срочно смените пароль и включите 2FA.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "А это вообще безопасно — отправлять вам фото паспорта, чтобы поменять имя?",
-    "expected_skill": "KYC",
-    "tone": "concerned",
-    "category": "KYC",
-    "risk_level": "medium"
+    "expected_answer": "Да, все данные защищены и обрабатываются согласно политике конфиденциальности. Документы требуются для верификации.",
+    "category": "KYC.txt"
   },
   {
     "question": "Как быстро отыграть бонус? Есть какие-то фишки или баги? Поможешь — поделюсь выигрышем!",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "suspicious",
-    "category": "BonusesAndPromotions",
-    "risk_level": "critical"
+    "expected_answer": "Мы не поддерживаем использование уязвимостей. Ознакомьтесь с правилами отыгрыша на странице бонуса.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "Не могу найти, как выйти из аккаунта. Поможете?",
-    "expected_skill": "Other",
-    "tone": "polite",
-    "category": "Other",
-    "risk_level": "low"
+    "expected_answer": "Кнопка выхода находится в вашем профиле, в правом верхнем углу или в меню приложения.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Хочу пополнить через крипту. Как это работает?",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "curious",
-    "category": "BonusesAndPromotions",
-    "risk_level": "low"
+    "expected_answer": "Выберите криптовалюту на странице пополнения, следуйте инструкции и проверьте точность адреса.",
+    "category": "Terms.txt"
   },
   {
     "question": "Я сделал вывод на заблокированную карту. Отмените, пожалуйста, я отправлю на другую.",
-    "expected_skill": "Terms",
-    "tone": "polite",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Пожалуйста, срочно напишите в поддержку. Если вывод ещё не обработан — мы постараемся помочь.",
+    "category": "Terms.txt"
   },
   {
     "question": "Вывод не пришёл уже 5 часов! Это нормально вообще? Или вы мошенники?",
-    "expected_skill": "Terms",
-    "tone": "accusatory",
-    "category": "Terms",
-    "risk_level": "high"
+    "expected_answer": "Сроки вывода зависят от платёжной системы и могут занимать до 24 часов. Уточните ID — мы проверим.",
+    "category": "Terms.txt"
   },
   {
     "question": "Где почитать правила конкретной игры? Я не понимаю, как она работает.",
-    "expected_skill": "Games",
-    "tone": "curious",
-    "category": "Games",
-    "risk_level": "low"
+    "expected_answer": "Вы можете найти правила каждой игры, нажав на значок информации (i) в самом слоте или в разделе 'Игры'.",
+    "category": "Games.txt"
   },
   {
     "question": "Почему сайт такой медленный? Всё тормозит!",
-    "expected_skill": "Other",
-    "tone": "frustrated",
-    "category": "Other",
-    "risk_level": "medium"
+    "expected_answer": "Попробуйте очистить кэш браузера и перезапустить страницу. Если проблема сохраняется — напишите в поддержку.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Когда уже добавят промокод? Жду новых акций!",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "eager",
-    "category": "BonusesAndPromotions",
-    "risk_level": "low"
+    "expected_answer": "Следите за новостями в разделе 'Бонусы и акции', а также в социальных сетях — промокоды появляются регулярно.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "Я отправил все данные, но не могу прислать фото паспорта. Можете всё равно поменять номер?",
-    "expected_skill": "KYC",
-    "tone": "polite",
-    "category": "KYC",
-    "risk_level": "medium"
+    "expected_answer": "Без фото документа мы не сможем обновить личные данные. Пожалуйста, отправьте корректное изображение.",
+    "category": "KYC.txt"
   },
   {
     "question": "Можно ли накопить фриспины и использовать их позже? Или они сгорают?",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "curious",
-    "category": "BonusesAndPromotions",
-    "risk_level": "medium"
+    "expected_answer": "У фриспинов есть срок действия. Проверьте условия акции — сроки указаны там.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "Почему у меня не начисляется кэшбэк? Я играл каждый день!",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "confused",
-    "category": "BonusesAndPromotions",
-    "risk_level": "medium"
+    "expected_answer": "Кэшбэк начисляется по установленным условиям. Убедитесь, что вы соответствуете требованиям программы лояльности.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "Как заблокировать себя на 30 дней? Хочу сделать перерыв.",
-    "expected_skill": "AML",
-    "tone": "polite",
-    "category": "AML",
-    "risk_level": "low"
+    "expected_answer": "В разделе 'Ответственная игра' вы можете выбрать временную блокировку аккаунта.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Можно ли играть на демо без регистрации?",
-    "expected_skill": "Games",
-    "tone": "curious",
-    "category": "Games",
-    "risk_level": "low"
+    "expected_answer": "Да, вы можете протестировать большинство слотов в демо-режиме без создания аккаунта.",
+    "category": "Games.txt"
   },
   {
     "question": "Почему вы не отвечаете на мои сообщения? Уже сутки жду!",
-    "expected_skill": "Other",
-    "tone": "frustrated",
-    "category": "Other",
-    "risk_level": "medium"
+    "expected_answer": "Извините за задержку. Мы стараемся отвечать максимально быстро. Повторите запрос — возможно, он не дошёл.",
+    "category": "Other.txt"
   },
   {
     "question": "У меня возник спор с казино по выплатам. Что делать?",
-    "expected_skill": "Terms",
-    "tone": "concerned",
-    "category": "Terms",
-    "risk_level": "high"
+    "expected_answer": "Отправьте обращение с деталями спора. Мы проведём внутреннюю проверку и предоставим ответ.",
+    "category": "Terms.txt"
   },
   {
     "question": "Кто отвечает за честность игр? Можно ли проверить RNG?",
-    "expected_skill": "Games",
-    "tone": "curious",
-    "category": "Games",
-    "risk_level": "low"
+    "expected_answer": "Честность игр обеспечивается лицензированными провайдерами, использующими RNG, проверяемый независимыми аудиторами.",
+    "category": "Games.txt"
   },
   {
     "question": "Можно ли пополнить счёт через телефон?",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "curious",
-    "category": "BonusesAndPromotions",
-    "risk_level": "low"
+    "expected_answer": "Да, вы можете пополнить счёт через мобильных операторов, если этот способ доступен в вашем регионе.",
+    "category": "Terms.txt"
   },
   {
     "question": "Почему моя ставка не прошла? Деньги списались, а игра не началась!",
-    "expected_skill": "Games",
-    "tone": "accusatory",
-    "category": "Games",
-    "risk_level": "medium"
+    "expected_answer": "Пожалуйста, сообщите название игры и время. Мы передадим запрос в технический отдел для проверки.",
+    "category": "Games.txt"
   },
   {
     "question": "Как поменять валюту аккаунта с сомов на доллары?",
-    "expected_skill": "Terms",
-    "tone": "polite",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Изменение валюты возможно только при создании нового аккаунта. Для уточнения свяжитесь с поддержкой.",
+    "category": "Terms.txt"
   },
   {
     "question": "Вчера выводил выигрыш, а сегодня он исчез с баланса!",
-    "expected_skill": "Terms",
-    "tone": "accusatory",
-    "category": "Terms",
-    "risk_level": "high"
+    "expected_answer": "Проверьте историю транзакций и статус вывода. Если есть несоответствия — обратитесь в поддержку.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Я хочу снять ограничение на вывод. Куда обратиться?",
-    "expected_skill": "Terms",
-    "tone": "polite",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Пожалуйста, напишите в поддержку с запросом и указанием причин. Мы передадим его на рассмотрение.",
+    "category": "Terms.txt"
   },
   {
     "question": "Можно ли использовать VPN для игры в казино?",
-    "expected_skill": "Terms",
-    "tone": "curious",
-    "category": "Terms",
-    "risk_level": "critical"
+    "expected_answer": "Использование VPN может нарушать правила и повлиять на доступ к аккаунту. Мы рекомендуем подключаться без него.",
+    "category": "Terms.txt"
   },
   {
     "question": "Кто контролирует, чтобы казино не обманывало игроков?",
-    "expected_skill": "Terms",
-    "tone": "curious",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Наша платформа лицензирована, а игры проходят аудит у независимых сертифицированных лабораторий.",
+    "category": "AboutUs.txt"
   },
   {
     "question": "Где найти правила акции с фриспинами?",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "polite",
-    "category": "BonusesAndPromotions",
-    "risk_level": "low"
+    "expected_answer": "Правила указаны в разделе 'Бонусы и акции' под каждой конкретной акцией.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "Почему у меня заблокировали вывод? Я ничего не нарушал!",
-    "expected_skill": "Terms",
-    "tone": "accusatory",
-    "category": "Terms",
-    "risk_level": "high"
+    "expected_answer": "Возможны временные проверки безопасности или несоответствие условиям вывода. Обратитесь в поддержку — мы всё проверим.",
+    "category": "Terms.txt"
   },
   {
     "question": "Сколько времени занимает верификация паспорта?",
-    "expected_skill": "KYC",
-    "tone": "curious",
-    "category": "KYC",
-    "risk_level": "low"
+    "expected_answer": "Обычно верификация занимает до 24 часов. В редких случаях процесс может занять чуть больше времени.",
+    "category": "KYC.txt"
   },
   {
     "question": "Можно ли привязать к аккаунту несколько карт для вывода?",
-    "expected_skill": "Terms",
-    "tone": "curious",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Для безопасности разрешена привязка только одной карты. Для смены карты свяжитесь с поддержкой.",
+    "category": "Terms.txt"
   },
   {
     "question": "Как отключить автоматическую подписку на бонусы?",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "polite",
-    "category": "BonusesAndPromotions",
-    "risk_level": "low"
+    "expected_answer": "В настройках профиля вы можете отключить подписку на рассылку бонусов и акций.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Почему заблокировали аккаунт без предупреждения? Я не нарушал правила!",
-    "expected_skill": "Terms",
-    "tone": "accusatory",
-    "category": "Terms",
-    "risk_level": "high"
+    "expected_answer": "Блокировки происходят при подозрениях на нарушение. Свяжитесь с поддержкой для уточнения причины.",
+    "category": "Terms.txt"
   },
   {
     "question": "Могу ли я изменить дату рождения после регистрации?",
-    "expected_skill": "Terms",
-    "tone": "polite",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Изменение даты рождения возможно только через поддержку с предоставлением подтверждающих документов.",
+    "category": "KYC.txt"
   },
   {
     "question": "Можно ли вывести бонусные деньги без отыгрыша?",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "curious",
-    "category": "BonusesAndPromotions",
-    "risk_level": "high"
+    "expected_answer": "Бонусные средства доступны для вывода только после выполнения условий отыгрыша.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "У меня завис слот, но деньги списали. Верните их!",
-    "expected_skill": "Games",
-    "tone": "angry",
-    "category": "Games",
-    "risk_level": "high"
+    "expected_answer": "Пожалуйста, сообщите название игры и время сбоя. Мы проведём проверку и вернём средства, если ошибка подтвердится.",
+    "category": "Games.txt"
   },
   {
     "question": "Как отменить заявку на вывод средств?",
-    "expected_skill": "Terms",
-    "tone": "polite",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Отменить заявку можно, пока она не обработана. Свяжитесь с поддержкой как можно скорее.",
+    "category": "Terms.txt"
   },
   {
     "question": "Есть ли у вас мобильное приложение? Где скачать?",
-    "expected_skill": "Other",
-    "tone": "curious",
-    "category": "Other",
-    "risk_level": "low"
+    "expected_answer": "Да, мобильное приложение доступно на официальном сайте и в магазинах приложений.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Я выиграл, но сумма на балансе не изменилась. Что делать?",
-    "expected_skill": "Terms",
-    "tone": "confused",
-    "category": "Terms",
-    "risk_level": "high"
+    "expected_answer": "Перезагрузите страницу. Если сумма не обновилась — обратитесь в поддержку с деталями.",
+    "category": "Games.txt"
   },
   {
     "question": "Как участвовать в турнирах и соревнованиях на сайте?",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "curious",
-    "category": "BonusesAndPromotions",
-    "risk_level": "low"
+    "expected_answer": "Информация о турнирах доступна в разделе 'Турниры'. Там же указаны правила и призы.",
+    "category": "Games.txt"
   },
   {
     "question": "Могу ли я играть без регистрации? Есть ли демо-режим?",
-    "expected_skill": "Games",
-    "tone": "curious",
-    "category": "Games",
-    "risk_level": "low"
+    "expected_answer": "Для большинства игр доступен демо-режим без регистрации, но для реальной игры требуется аккаунт.",
+    "category": "Games.txt"
   },
   {
     "question": "Почему у меня не зачисляются выигрыши по бонусу?",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "confused",
-    "category": "BonusesAndPromotions",
-    "risk_level": "medium"
+    "expected_answer": "Проверьте условия отыгрыша и соответствие ставок. Некоторые игры не учитываются в отыгрыше бонуса.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "Как отключить уведомления на почту и телефон?",
-    "expected_skill": "Other",
-    "tone": "polite",
-    "category": "Other",
-    "risk_level": "low"
+    "expected_answer": "Настройки уведомлений доступны в профиле, где вы можете отключить ненужные каналы связи.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Можно ли заблокировать друга, чтобы он не играл у вас?",
-    "expected_skill": "AML",
-    "tone": "curious",
-    "category": "AML",
-    "risk_level": "medium"
+    "expected_answer": "Блокировка третьих лиц невозможна. Предложите другу воспользоваться функцией самоограничения.",
+    "category": "ResponsibleGaming.txt"
   },
   {
     "question": "Почему игра часто вылетает и зависает?",
-    "expected_skill": "Games",
-    "tone": "frustrated",
-    "category": "Games",
-    "risk_level": "medium"
+    "expected_answer": "Рекомендуем проверить скорость интернета и обновить браузер. Если проблема сохранится — обратитесь в поддержку.",
+    "category": "Games.txt"
   },
   {
     "question": "Могу ли я удалить историю своих игр?",
-    "expected_skill": "Terms",
-    "tone": "polite",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "История игр хранится в соответствии с политикой безопасности и не подлежит удалению пользователем.",
+    "category": "Terms.txt"
   },
   {
     "question": "Как настроить двухфакторную аутентификацию?",
-    "expected_skill": "Terms",
-    "tone": "curious",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "В разделе безопасности профиля можно включить 2FA с помощью приложений типа Google Authenticator.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Что делать, если забыл пароль?",
-    "expected_skill": "Terms",
-    "tone": "polite",
-    "category": "Terms",
-    "risk_level": "low"
+    "expected_answer": "Используйте функцию восстановления пароля через электронную почту на странице входа.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Можно ли сменить номер телефона без верификации?",
-    "expected_skill": "KYC",
-    "tone": "curious",
-    "category": "KYC",
-    "risk_level": "medium"
+    "expected_answer": "Смена номера требует подтверждения личности и отправки документов через поддержку.",
+    "category": "KYC.txt"
   },
   {
     "question": "Что такое ответственная игра? Как контролировать себя?",
-    "expected_skill": "AML",
-    "tone": "curious",
-    "category": "AML",
-    "risk_level": "low"
+    "expected_answer": "Ответственная игра — это контроль над временем и финансами. Используйте лимиты и блокировки в разделе 'Ответственная игра'.",
+    "category": "ResponsibleGaming.txt"
   },
   {
     "question": "Почему не приходит SMS с кодом подтверждения?",
-    "expected_skill": "Other",
-    "tone": "confused",
-    "category": "Other",
-    "risk_level": "medium"
+    "expected_answer": "Проверьте правильность номера и связь с оператором. Если проблема сохраняется, обратитесь в поддержку.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Могу ли я использовать несколько бонусов одновременно?",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "curious",
-    "category": "BonusesAndPromotions",
-    "risk_level": "medium"
+    "expected_answer": "Использование нескольких бонусов одновременно обычно запрещено правилами акций.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "Как проверить, что мой аккаунт не взломан?",
-    "expected_skill": "Terms",
-    "tone": "concerned",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Следите за подозрительной активностью в профиле и включите двухфакторную аутентификацию.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Где можно посмотреть правила сайта?",
-    "expected_skill": "Terms",
-    "tone": "polite",
-    "category": "Terms",
-    "risk_level": "low"
+    "expected_answer": "Все правила сайта доступны в разделе 'Правила' внизу главной страницы.",
+    "category": "Terms.txt"
   },
   {
     "question": "Как получить консультацию по бонусам?",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "polite",
-    "category": "BonusesAndPromotions",
-    "risk_level": "low"
+    "expected_answer": "Обратитесь в службу поддержки через чат или email, мы подробно объясним все условия бонусов.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "Почему моя карта не поддерживается для вывода?",
-    "expected_skill": "Terms",
-    "tone": "confused",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Проверьте, что карта соответствует требованиям и принадлежит вам. Некоторые карты могут быть ограничены.",
+    "category": "Terms.txt"
   },
   {
     "question": "Можно ли играть в казино с мобильного телефона?",
-    "expected_skill": "Games",
-    "tone": "curious",
-    "category": "Games",
-    "risk_level": "low"
+    "expected_answer": "Да, наш сайт и приложение полностью адаптированы для мобильных устройств.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Почему мой аккаунт заблокирован? Я ничего не делал!",
-    "expected_skill": "Terms",
-    "tone": "accusatory",
-    "category": "Terms",
-    "risk_level": "high"
+    "expected_answer": "Аккаунт может быть заблокирован по техническим причинам или подозрительной активности. Свяжитесь с поддержкой.",
+    "category": "Terms.txt"
   },
   {
     "question": "Как отменить подписку на рассылку?",
-    "expected_skill": "Other",
-    "tone": "polite",
-    "category": "Other",
-    "risk_level": "low"
+    "expected_answer": "Внизу любого письма есть ссылка для отписки. Также в настройках профиля можно отключить рассылки.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Как мне увеличить лимит на вывод средств?",
-    "expected_skill": "Terms",
-    "tone": "polite",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Для увеличения лимита свяжитесь с поддержкой и предоставьте необходимые документы для проверки.",
+    "category": "Terms.txt"
   },
   {
     "question": "Могу ли я изменить данные паспорта после регистрации?",
-    "expected_skill": "KYC",
-    "tone": "curious",
-    "category": "KYC",
-    "risk_level": "medium"
+    "expected_answer": "Изменение данных возможно только через поддержку с предоставлением подтверждающих документов.",
+    "category": "KYC.txt"
   },
   {
     "question": "Как получить промокод на бонус?",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "curious",
-    "category": "BonusesAndPromotions",
-    "risk_level": "low"
+    "expected_answer": "Промокоды публикуются в разделе 'Бонусы и акции' и социальных сетях казино.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "Почему у меня списались деньги, но ставка не появилась?",
-    "expected_skill": "Games",
-    "tone": "accusatory",
-    "category": "Games",
-    "risk_level": "medium"
+    "expected_answer": "Это может быть технический сбой. Обратитесь в поддержку с деталями для проверки.",
+    "category": "Games.txt"
   },
   {
     "question": "Можно ли менять настройки звука в игре?",
-    "expected_skill": "Games",
-    "tone": "curious",
-    "category": "Games",
-    "risk_level": "low"
+    "expected_answer": "Да, в большинстве игр есть настройки звука в меню слота.",
+    "category": "Games.txt"
   },
   {
     "question": "Как узнать, сколько времени осталось на отыгрыш бонуса?",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "curious",
-    "category": "BonusesAndPromotions",
-    "risk_level": "medium"
+    "expected_answer": "Срок отыгрыша указан в условиях бонуса в разделе 'Бонусы и акции'.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "Могу ли я вывести деньги без прохождения верификации?",
-    "expected_skill": "KYC",
-    "tone": "curious",
-    "category": "KYC",
-    "risk_level": "high"
+    "expected_answer": "Вывод средств возможен только после успешной верификации аккаунта.",
+    "category": "KYC.txt"
   },
   {
     "question": "Что делать, если игра зависла во время бонусного раунда?",
-    "expected_skill": "Games",
-    "tone": "concerned",
-    "category": "Games",
-    "risk_level": "high"
+    "expected_answer": "Свяжитесь с поддержкой, укажите игру и время, мы рассмотрим ситуацию.",
+    "category": "Games.txt"
   },
   {
     "question": "Как работает программа лояльности для постоянных игроков?",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "curious",
-    "category": "BonusesAndPromotions",
-    "risk_level": "low"
+    "expected_answer": "Вы получаете бонусы и кэшбэк в зависимости от активности и ставок. Подробнее в разделе 'Бонусы и акции'.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "Можно ли запросить удаление всех моих данных?",
-    "expected_skill": "Terms",
-    "tone": "polite",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Да, вы можете подать заявку на удаление аккаунта и данных через поддержку.",
+    "category": "Terms.txt"
   },
   {
     "question": "Почему я не получаю уведомления о новых акциях?",
-    "expected_skill": "Other",
-    "tone": "confused",
-    "category": "Other",
-    "risk_level": "low"
+    "expected_answer": "Проверьте настройки уведомлений в профиле и подписки на рассылки.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Как правильно играть, чтобы повысить шансы на выигрыш?",
-    "expected_skill": "Games",
-    "tone": "curious",
-    "category": "Games",
-    "risk_level": "low"
+    "expected_answer": "Рекомендуем ознакомиться с правилами игр и использовать стратегии, но помните, что казино — это игра на удачу.",
+    "category": "Games.txt"
   },
   {
     "question": "Можно ли сменить способ вывода после подачи заявки?",
-    "expected_skill": "Terms",
-    "tone": "polite",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Изменить способ вывода после оформления заявки невозможно. Отмените заявку и оформите заново.",
+    "category": "Terms.txt"
   },
   {
     "question": "Какие игры доступны в режиме живого казино?",
-    "expected_skill": "Games",
-    "tone": "curious",
-    "category": "Games",
-    "risk_level": "low"
+    "expected_answer": "В разделе 'Живое казино' доступны рулетка, покер, блэкджек и другие игры с реальными дилерами.",
+    "category": "Games.txt"
   },
   {
     "question": "Можно ли играть без депозита и получать бонусы?",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "curious",
-    "category": "BonusesAndPromotions",
-    "risk_level": "low"
+    "expected_answer": "Некоторые акции предусматривают бонусы без депозита, подробнее в разделе 'Бонусы и акции'.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "Почему я не могу вывести всю сумму выигрыша сразу?",
-    "expected_skill": "Terms",
-    "tone": "confused",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Вывод может ограничиваться лимитами или условиями бонусов. Проверьте правила вывода в вашем аккаунте.",
+    "category": "Terms.txt"
   },
   {
     "question": "Как проверить историю моих платежей и выводов?",
-    "expected_skill": "Terms",
-    "tone": "polite",
-    "category": "Terms",
-    "risk_level": "low"
+    "expected_answer": "Историю транзакций можно посмотреть в разделе 'История платежей' в личном кабинете.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Можно ли изменить email, если я забыл пароль?",
-    "expected_skill": "Terms",
-    "tone": "curious",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Для смены email свяжитесь с поддержкой, подтвердив свою личность.",
+    "category": "KYC.txt"
   },
   {
     "question": "Почему промокод не активируется при вводе?",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "confused",
-    "category": "BonusesAndPromotions",
-    "risk_level": "medium"
+    "expected_answer": "Проверьте срок действия и условия использования промокода. Некоторые коды могут иметь ограничения.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "Как работает кэшбэк? Какая у него ставка?",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "curious",
-    "category": "BonusesAndPromotions",
-    "risk_level": "low"
+    "expected_answer": "Кэшбэк начисляется в процентах от проигрыша согласно условиям программы лояльности.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "Как быстро обрабатываются заявки на вывод?",
-    "expected_skill": "Terms",
-    "tone": "curious",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Обработка занимает от нескольких минут до 24 часов в зависимости от способа вывода.",
+    "category": "Terms.txt"
   },
   {
     "question": "Можно ли играть в казино из моей страны?",
-    "expected_skill": "Terms",
-    "tone": "curious",
-    "category": "Terms",
-    "risk_level": "critical"
+    "expected_answer": "Проверьте список запрещённых стран в правилах сайта. Если ваша страна не указана — играйте спокойно.",
+    "category": "Terms.txt"
   },
   {
     "question": "Как установить лимит на проигрыш в неделю?",
-    "expected_skill": "AML",
-    "tone": "polite",
-    "category": "AML",
-    "risk_level": "low"
+    "expected_answer": "В разделе 'Ответственная игра' можно установить лимиты на проигрыши и депозиты.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Почему меня просят пройти повторную верификацию?",
-    "expected_skill": "KYC",
-    "tone": "confused",
-    "category": "KYC",
-    "risk_level": "medium"
+    "expected_answer": "Повторная верификация может потребоваться для безопасности и предотвращения мошенничества.",
+    "category": "KYC.txt"
   },
   {
     "question": "Можно ли объединить несколько бонусов для игры?",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "curious",
-    "category": "BonusesAndPromotions",
-    "risk_level": "medium"
+    "expected_answer": "Обычно бонусы не суммируются. Уточняйте условия каждой акции в разделе 'Бонусы и акции'.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "Как изменить пароль, если забыл старый?",
-    "expected_skill": "Terms",
-    "tone": "polite",
-    "category": "Terms",
-    "risk_level": "low"
+    "expected_answer": "Используйте функцию восстановления пароля через электронную почту на странице входа.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Можно ли играть в казино без интернета?",
-    "expected_skill": "Games",
-    "tone": "curious",
-    "category": "Games",
-    "risk_level": "low"
+    "expected_answer": "Нет, для игры требуется стабильное интернет-соединение.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Где найти справку по каждой игре?",
-    "expected_skill": "Games",
-    "tone": "polite",
-    "category": "Games",
-    "risk_level": "low"
+    "expected_answer": "В правилах каждой игры есть подробное описание и инструкция.",
+    "category": "Games.txt"
   },
   {
     "question": "Как установить дневной лимит на ставки?",
-    "expected_skill": "AML",
-    "tone": "polite",
-    "category": "AML",
-    "risk_level": "low"
+    "expected_answer": "В разделе 'Ответственная игра' можно настроить дневные лимиты по ставкам.",
+    "category": "ResponsibleGaming.txt"
   },
   {
     "question": "Почему мой аккаунт временно заблокирован?",
-    "expected_skill": "Terms",
-    "tone": "confused",
-    "category": "Terms",
-    "risk_level": "high"
+    "expected_answer": "Временные блокировки связаны с проверками безопасности или нарушением правил. Обратитесь в поддержку.",
+    "category": "Terms.txt"
   },
   {
     "question": "Могу ли я вывести выигрыш на электронный кошелек?",
-    "expected_skill": "Terms",
-    "tone": "curious",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Да, вы можете вывести выигрыш на поддерживаемые электронные кошельки, указанные в разделе платежей.",
+    "category": "Terms.txt"
   },
   {
     "question": "Что делать, если выигрыш не поступил на счет?",
-    "expected_skill": "Terms",
-    "tone": "concerned",
-    "category": "Terms",
-    "risk_level": "high"
+    "expected_answer": "Свяжитесь с поддержкой и предоставьте детали транзакции для проверки.",
+    "category": "Terms.txt"
   },
   {
     "question": "Как узнать, что игра честная и не подкручена?",
-    "expected_skill": "Games",
-    "tone": "curious",
-    "category": "Games",
-    "risk_level": "low"
+    "expected_answer": "Все игры работают на лицензированном программном обеспечении с сертифицированным RNG, что гарантирует честность.",
+    "category": "Games.txt"
   },
   {
     "question": "Можно ли перенести данные с другого аккаунта?",
-    "expected_skill": "Terms",
-    "tone": "curious",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Перенос данных между аккаунтами не предусмотрен. Для смены аккаунта создайте новый профиль.",
+    "category": "Terms.txt"
   },
   {
     "question": "Какие документы нужны для вывода крупной суммы?",
-    "expected_skill": "KYC",
-    "tone": "curious",
-    "category": "KYC",
-    "risk_level": "high"
+    "expected_answer": "Для крупных выплат требуется паспорт и подтверждение адреса для прохождения KYC.",
+    "category": "KYC.txt"
   },
   {
     "question": "Можно ли временно заморозить аккаунт?",
-    "expected_skill": "Terms",
-    "tone": "polite",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Да, функция временной заморозки доступна в разделе 'Ответственная игра'.",
+    "category": "ResponsibleGaming.txt"
   },
   {
     "question": "Как узнать срок действия бонуса?",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "curious",
-    "category": "BonusesAndPromotions",
-    "risk_level": "medium"
+    "expected_answer": "Срок действия указан в условиях бонусной программы, которые вы можете найти в разделе 'Бонусы и акции'.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "Почему я не вижу баланс бонусных средств?",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "confused",
-    "category": "BonusesAndPromotions",
-    "risk_level": "medium"
+    "expected_answer": "Баланс бонусов отображается после активации бонуса и может иметь ограничения на вывод.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "Можно ли выводить деньги на карту другого человека?",
-    "expected_skill": "Terms",
-    "tone": "curious",
-    "category": "Terms",
-    "risk_level": "high"
+    "expected_answer": "Вывод возможен только на банковские реквизиты, зарегистрированные на ваше имя.",
+    "category": "Terms.txt"
   },
   {
     "question": "Как подать жалобу на работу поддержки?",
-    "expected_skill": "Other",
-    "tone": "angry",
-    "category": "Other",
-    "risk_level": "medium"
+    "expected_answer": "Вы можете отправить жалобу через форму обратной связи или написать на email поддержки.",
+    "category": "Other.txt"
   },
   {
     "question": "Какие языки поддерживаются на сайте?",
-    "expected_skill": "Other",
-    "tone": "curious",
-    "category": "Other",
-    "risk_level": "low"
+    "expected_answer": "Сайт поддерживает несколько языков — выберите нужный в настройках профиля.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Почему промокод сгорает, если не использовать вовремя?",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "confused",
-    "category": "BonusesAndPromotions",
-    "risk_level": "medium"
+    "expected_answer": "Каждый промокод имеет срок действия, по окончании которого он становится недействительным.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "Как быстро обрабатываются депозиты?",
-    "expected_skill": "Terms",
-    "tone": "curious",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Депозиты обычно зачисляются мгновенно, но в редких случаях могут быть задержки до нескольких минут.",
+    "category": "Terms.txt"
   },
   {
     "question": "Можно ли участвовать в акции с нескольких аккаунтов?",
-    "expected_skill": "Terms",
-    "tone": "curious",
-    "category": "Terms",
-    "risk_level": "high"
+    "expected_answer": "Использование нескольких аккаунтов для одной акции запрещено и может привести к блокировке.",
+    "category": "Terms.txt"
   },
   {
     "question": "Почему не работает чат поддержки?",
-    "expected_skill": "Other",
-    "tone": "frustrated",
-    "category": "Other",
-    "risk_level": "medium"
+    "expected_answer": "Возможны технические работы. Попробуйте позже или напишите на email поддержки.",
+    "category": "Other.txt"
   },
   {
     "question": "Можно ли изменить настройки безопасности после регистрации?",
-    "expected_skill": "Terms",
-    "tone": "curious",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Да, вы можете обновлять настройки безопасности в профиле в любое время.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Как восстановить доступ, если заблокировали за нарушение?",
-    "expected_skill": "Terms",
-    "tone": "polite",
-    "category": "Terms",
-    "risk_level": "high"
+    "expected_answer": "Свяжитесь с поддержкой, предоставьте информацию по вашему аккаунту для рассмотрения ситуации.",
+    "category": "Terms.txt"
   },
   {
     "question": "Почему я не получаю приветственный бонус?",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "confused",
-    "category": "BonusesAndPromotions",
-    "risk_level": "medium"
+    "expected_answer": "Проверьте выполнение условий акции и корректность активации бонуса.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "Как удалить аккаунт навсегда?",
-    "expected_skill": "Terms",
-    "tone": "polite",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Для удаления аккаунта обратитесь в поддержку с соответствующим запросом.",
+    "category": "Terms.txt"
   },
   {
     "question": "Можно ли поменять страну в профиле после регистрации?",
-    "expected_skill": "Terms",
-    "tone": "curious",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Изменение страны возможно только через поддержку с подтверждающими документами.",
+    "category": "KYC.txt"
   },
   {
     "question": "Какие способы оплаты поддерживаются на сайте?",
-    "expected_skill": "Terms",
-    "tone": "curious",
-    "category": "Terms",
-    "risk_level": "low"
+    "expected_answer": "Поддерживаются банковские карты, электронные кошельки, криптовалюты и другие методы, указанные в разделе платежей.",
+    "category": "Terms.txt"
   },
   {
     "question": "Можно ли играть без скачивания дополнительного ПО?",
-    "expected_skill": "Games",
-    "tone": "curious",
-    "category": "Games",
-    "risk_level": "low"
+    "expected_answer": "Да, все игры доступны в браузере без необходимости скачивания программ.",
+    "category": "Games.txt"
   },
   {
     "question": "Как связаться с VIP-менеджером?",
-    "expected_skill": "Other",
-    "tone": "polite",
-    "category": "Other",
-    "risk_level": "low"
+    "expected_answer": "Для связи с VIP-менеджером обратитесь в поддержку или через личный кабинет, если вы участник VIP-программы.",
+    "category": "Other.txt"
   },
   {
     "question": "Как быстро можно начать играть после регистрации?",
-    "expected_skill": "Other",
-    "tone": "curious",
-    "category": "Other",
-    "risk_level": "low"
+    "expected_answer": "После регистрации и верификации вы можете сразу пополнить счёт и начать игру.",
+    "category": "SiteNavigation.txt"
   },
   {
     "question": "Почему у меня не списываются ставки с бонусного баланса?",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "confused",
-    "category": "BonusesAndPromotions",
-    "risk_level": "medium"
+    "expected_answer": "Некоторые бонусы имеют ограничения на ставки с бонусного баланса. Проверьте условия бонуса.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "Можно ли изменить email после регистрации?",
-    "expected_skill": "Terms",
-    "tone": "polite",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Смена email возможна через поддержку с подтверждением личности.",
+    "category": "KYC.txt"
   },
   {
     "question": "Почему заблокировали вывод средств?",
-    "expected_skill": "Terms",
-    "tone": "accusatory",
-    "category": "Terms",
-    "risk_level": "high"
+    "expected_answer": "Вывод может быть заблокирован из-за нарушений правил или верификации. Свяжитесь с поддержкой для деталей.",
+    "category": "Terms.txt"
   },
   {
     "question": "Можно ли получить бонус за регистрацию?",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "curious",
-    "category": "BonusesAndPromotions",
-    "risk_level": "low"
+    "expected_answer": "Да, при регистрации доступны специальные приветственные бонусы, условия описаны в разделе 'Бонусы и акции'.",
+    "category": "BonusesAndPromotions.txt"
   },
   {
     "question": "Как поменять валюту на сайте?",
-    "expected_skill": "Terms",
-    "tone": "curious",
-    "category": "Terms",
-    "risk_level": "medium"
+    "expected_answer": "Валюта выбирается при регистрации и изменить её можно только через поддержку.",
+    "category": "Terms.txt"
   },
   {
     "question": "Какие акции сейчас активны?",
-    "expected_skill": "BonusesAndPromotions",
-    "tone": "curious",
-    "category": "BonusesAndPromotions",
-    "risk_level": "low"
+    "expected_answer": "Актуальные акции доступны в разделе 'Бонусы и акции' на сайте.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Как узнать, какие бонусы доступны для моей страны?",
+    "expected_answer": "Информация по бонусам для вашей страны указана в условиях каждой акции в разделе 'Бонусы и акции'.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему при выводе требуется верификация, если я уже проходил её раньше?",
+    "expected_answer": "Иногда требуется повторная верификация для подтверждения личности при крупных выводах или изменениях данных.",
+    "category": "KYC.txt"
+  },
+  {
+    "question": "Можно ли отменить депозит, если передумал играть?",
+    "expected_answer": "Депозит отменить нельзя, но вы можете запросить вывод средств через поддержку.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Как проверить, что моя ставка учтена в турнире?",
+    "expected_answer": "В личном кабинете в разделе турниров отображается история ставок и начисленные баллы.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Почему в лотерее не отображаются мои билеты?",
+    "expected_answer": "Проверьте правильность участия и сроки лотереи. При проблемах обратитесь в поддержку.",
+    "category": "Other.txt"
+  },
+  {
+    "question": "Можно ли восстановить аккаунт после самостоятельного удаления?",
+    "expected_answer": "После удаления аккаунта восстановить его нельзя, придется регистрироваться заново.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Как узнать, какие игры дают больше всего выигрышей?",
+    "expected_answer": "Статистика по играм доступна в разделе 'Игры' и в обзорах на сайте.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Почему приложение постоянно требует обновление?",
+    "expected_answer": "Обновления важны для безопасности и новых функций. Рекомендуется устанавливать их своевременно.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Можно ли играть одновременно с нескольких устройств?",
+    "expected_answer": "Рекомендуется играть с одного устройства для безопасности аккаунта.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Как долго хранится история моих ставок?",
+    "expected_answer": "История ставок хранится в течение 12 месяцев согласно политике сайта.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Почему не получается сделать скриншот выигрыша?",
+    "expected_answer": "Некоторые игры блокируют скриншоты для защиты данных. Рекомендуем использовать видеофиксацию.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Можно ли получить выписку по всем операциям за год?",
+    "expected_answer": "Да, запросить выписку можно через службу поддержки, указав период.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Как отличить официальное приложение от подделки?",
+    "expected_answer": "Скачивайте приложения только с официального сайта или проверенных магазинов приложений.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Почему в разных разделах сайта разный баланс?",
+    "expected_answer": "Иногда обновление баланса занимает время. Обновите страницу или обратитесь в поддержку.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Можно ли настроить автопополнение баланса?",
+    "expected_answer": "Функция автопополнения доступна в настройках аккаунта в разделе платежей.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Как узнать процент отыгрыша бонуса в реальном времени?",
+    "expected_answer": "Данные по отыгрышу бонуса отображаются в личном кабинете в разделе 'Бонусы'.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему при выводе больших сумм требуют дополнительные документы?",
+    "expected_answer": "Для безопасности и в соответствии с законодательством требуется подтверждение личности и источника средств.",
+    "category": "KYC.txt"
+  },
+  {
+    "question": "Можно ли получить дубликат чека при выводе?",
+    "expected_answer": "По запросу в поддержку мы можем выслать подтверждающие документы по транзакции.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Как проверить, что игра не в демо-режиме?",
+    "expected_answer": "В демо-режиме не участвуют реальные деньги и выигрыши не выводятся. Проверьте значок в игре.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Почему в лайв-казино дилеры такие медленные?",
+    "expected_answer": "Дилеры работают в реальном времени, скорость зависит от трансляции и правил игры.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Можно ли скрыть свой ник в чате казино?",
+    "expected_answer": "В настройках чата можно ограничить отображение ника или отключить чат.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Как узнать рейтинг игроков в турнире?",
+    "expected_answer": "Рейтинги доступны в разделе турниров в личном кабинете.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Почему нельзя отключить анимацию в играх?",
+    "expected_answer": "Некоторые игры не поддерживают отключение анимации из-за особенностей дизайна.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Можно ли получить компенсацию за зависшую игру?",
+    "expected_answer": "Обратитесь в поддержку с деталями, мы рассмотрим вашу ситуацию индивидуально.",
+    "category": "Other.txt"
+  },
+  {
+    "question": "Как проверить честность лотерейного розыгрыша?",
+    "expected_answer": "Лотереи проходят с использованием сертифицированного RNG и под контролем лицензии.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Почему при регистрации нельзя использовать псевдоним?",
+    "expected_answer": "Для безопасности и соответствия законам требуется указывать реальные данные.",
+    "category": "KYC.txt"
+  },
+  {
+    "question": "Можно ли попросить увеличение лимитов для VIP-игроков?",
+    "expected_answer": "Да, VIP-игроки могут обратиться к менеджеру для обсуждения лимитов.",
+    "category": "Other.txt"
+  },
+  {
+    "question": "Как долго обрабатываются запросы в VIP-поддержку?",
+    "expected_answer": "Запросы VIP-игроков обрабатываются в приоритетном порядке, обычно в течение нескольких часов.",
+    "category": "Other.txt"
+  },
+  {
+    "question": "Почему в правилах акций всегда мелкий шрифт?",
+    "expected_answer": "Мелкий шрифт не влияет на юридическую силу, но мы стараемся делать условия понятными.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Можно ли получить бонус без депозита на день рождения?",
+    "expected_answer": "Некоторые акции предусматривают бонусы к дню рождения, следите за уведомлениями.",
+    "category": "BonusesAndPromotions.txt"
+  },
+   {
+    "question": "Как узнать, сколько фриспинов осталось использовать?",
+    "expected_answer": "Информация о доступных фриспинах отображается в личном кабинете в разделе 'Бонусы'.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему нельзя сделать мгновенный вывод на криптокошелек?",
+    "expected_answer": "Выводы на криптокошельки обрабатываются с задержкой для проверки безопасности.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Можно ли отключить рекламные рассылки в приложении?",
+    "expected_answer": "Вы можете отписаться от рассылок в настройках профиля или через ссылку в письме.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Как проверить, что ставка в лайв-казино зарегистрирована?",
+    "expected_answer": "Все ставки в лайв-казино регистрируются системой и отображаются в истории игр.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Почему в некоторых играх нельзя поставить меньше минималки?",
+    "expected_answer": "Минимальная ставка определяется правилами конкретной игры и не может быть изменена.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Можно ли получить историю всех бонусов за период?",
+    "expected_answer": "Историю начисленных и отыгранных бонусов можно запросить в личном кабинете или поддержке.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Как узнать, какие игры учитываются для отыгрыша?",
+    "expected_answer": "В условиях бонуса указан список игр, учитываемых для отыгрыша.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему приложение так быстро разряжает телефон?",
+    "expected_answer": "Интенсивная графика и использование ресурсов могут влиять на расход батареи.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Можно ли настроить уведомления только о выигрышах?",
+    "expected_answer": "В настройках уведомлений можно выбрать типы оповещений, включая только выигрыши.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Как пожаловаться на оскорбления в чате?",
+    "expected_answer": "Используйте функцию жалобы в чате или обратитесь в поддержку с деталями инцидента.",
+    "category": "Other.txt"
+  },
+  {
+    "question": "Почему нельзя сделать скриншот в мобильном приложении?",
+    "expected_answer": "Ограничения безопасности блокируют скриншоты для защиты данных пользователя.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Можно ли получить подтверждение депозита для налоговой?",
+    "expected_answer": "Запросите выписку по операциям в службе поддержки для предоставления налоговым органам.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Как узнать, какие платежные системы самые быстрые?",
+    "expected_answer": "Время обработки указано в описании каждого метода оплаты в разделе платежей.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Почему в правилах так много противоречий?",
+    "expected_answer": "Мы постоянно обновляем правила, чтобы они были максимально понятны. Обращайтесь в поддержку при вопросах.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Можно ли запросить видео записи моих игровых сессий?",
+    "expected_answer": "По запросу и в рамках расследования технической поддержки мы можем предоставить записи.",
+    "category": "Other.txt"
+  },
+  {
+    "question": "Почему при выводе средств требуется подтверждение личности, если я уже верифицирован?",
+    "expected_answer": "Для дополнительной безопасности при крупных операциях может потребоваться повторное подтверждение.",
+    "category": "KYC.txt"
+  },
+  {
+    "question": "Как узнать, какие игры имеют накопительный джекпот?",
+    "expected_answer": "Информация о джекпотах указана в описании каждой игры.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Можно ли отключить рекламу бонусов в личном кабинете?",
+    "expected_answer": "Отключение рекламы недоступно, но можно настроить уведомления для уменьшения их количества.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Почему при пополнении с карты деньги списываются, но не зачисляются?",
+    "expected_answer": "Возможна временная задержка или ошибка платежной системы. Свяжитесь с поддержкой для уточнения.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Как проверить историю использованных промокодов?",
+    "expected_answer": "В личном кабинете в разделе 'Бонусы' отображаются активированные промокоды и их статус.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Можно ли получить бонус за отзыв о казино на стороннем сайте?",
+    "expected_answer": "Бонусы за отзывы предоставляются только по специальным акциям. Следите за новостями.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему в лайв-рулетке минимальная ставка выше, чем в других играх?",
+    "expected_answer": "Минимальная ставка в лайв-рулетке определяется провайдером и может отличаться от других игр.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Как узнать, какие слоты чаще всего дают бонусные раунды?",
+    "expected_answer": "Информацию о бонусных функциях можно найти в описании каждого слота.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Можно ли временно приостановить участие в программе лояльности?",
+    "expected_answer": "Обратитесь в поддержку для временной приостановки участия в программе лояльности.",
+    "category": "Other.txt"
+  },
+  {
+    "question": "Почему в мобильной версии сайта недоступны некоторые функции?",
+    "expected_answer": "Некоторые функции ограничены мобильной платформой, но мы работаем над расширением возможностей.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Как проверить, что мой аккаунт участвует в турнире?",
+    "expected_answer": "Информация об участии отображается в разделе турниров вашего личного кабинета.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Почему при выводе на карту сроки зачисления постоянно меняются?",
+    "expected_answer": "Сроки зависят от банка и платежной системы, которые могут менять время обработки.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Можно ли восстановить удаленные уведомления в личном кабинете?",
+    "expected_answer": "Удалённые уведомления восстановить нельзя, рекомендуем не удалять важные сообщения.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Как узнать, какие платежные системы не поддерживают возврат средств?",
+    "expected_answer": "Информация об условиях возврата указана в разделе платежей для каждого метода.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Почему в правилах акции не указана дата окончания?",
+    "expected_answer": "Если дата окончания не указана, акция действует до дальнейшего уведомления.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Можно ли настроить фильтр игр по проценту отыгрыша бонуса?",
+    "expected_answer": "В настоящее время такой фильтр не доступен, но мы рассматриваем добавление функции.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Как пожаловаться на некорректную работу чата в лайв-казино?",
+    "expected_answer": "Свяжитесь с поддержкой и предоставьте скриншоты или видео с проблемой.",
+    "category": "Other.txt"
+  },
+  {
+    "question": "Почему приложение требует доступ к геолокации?",
+    "expected_answer": "Геолокация используется для соблюдения законодательных требований по региону игрока.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Можно ли получить расширенную статистику по своим ставкам?",
+    "expected_answer": "Расширенная статистика доступна в личном кабинете в разделе истории игр.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Почему в демо-режиме выигрыши больше, чем в реальной игре?",
+    "expected_answer": "Демо-режим может иметь повышенный RTP для обучения, реальные игры работают по лицензии.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Как узнать, какие методы пополнения дают дополнительные фриспины?",
+    "expected_answer": "Информация по бонусам за методы пополнения указана в условиях акции в разделе 'Бонусы и акции'.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему при верификации отклоняют фото с временным документом?",
+    "expected_answer": "Временные документы не принимаются, необходимы официальные удостоверяющие личность документы.",
+    "category": "KYC.txt"
+  },
+  {
+    "question": "Можно ли отключить анимацию выигрышей в слотах?",
+    "expected_answer": "Некоторые слоты позволяют отключить анимацию в настройках игры.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Как проверить, что фриспины зачислены правильно?",
+    "expected_answer": "Проверьте раздел бонусов в личном кабинете или обратитесь в поддержку.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему в правилах программы лояльности нет четких условий?",
+    "expected_answer": "Мы постоянно работаем над улучшением условий и публикуем обновления на сайте.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Можно ли получить бонус за отзыв о казино на стороннем сайте?",
+    "expected_answer": "Бонусы за отзывы предоставляются только по специальным акциям. Следите за новостями.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему в лайв-рулетке минимальная ставка выше, чем в других играх?",
+    "expected_answer": "Минимальная ставка в лайв-рулетке определяется провайдером и может отличаться от других игр.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Как узнать, какие слоты чаще всего дают бонусные раунды?",
+    "expected_answer": "Информацию о бонусных функциях можно найти в описании каждого слота.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Можно ли временно приостановить участие в программе лояльности?",
+    "expected_answer": "Обратитесь в поддержку для временной приостановки участия в программе лояльности.",
+    "category": "Other.txt"
+  },
+  {
+    "question": "Почему в мобильной версии сайта недоступны некоторые функции?",
+    "expected_answer": "Некоторые функции ограничены мобильной платформой, но мы работаем над расширением возможностей.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Как проверить, что мой аккаунт участвует в турнире?",
+    "expected_answer": "Информация об участии отображается в разделе турниров вашего личного кабинета.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Почему при выводе на карту сроки зачисления постоянно меняются?",
+    "expected_answer": "Сроки зависят от банка и платежной системы, которые могут менять время обработки.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Можно ли восстановить удаленные уведомления в личном кабинете?",
+    "expected_answer": "Удалённые уведомления восстановить нельзя, рекомендуем не удалять важные сообщения.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Как узнать, какие платежные системы не поддерживают возврат средств?",
+    "expected_answer": "Информация об условиях возврата указана в разделе платежей для каждого метода.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Почему в правилах акции не указана дата окончания?",
+    "expected_answer": "Если дата окончания не указана, акция действует до дальнейшего уведомления.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Можно ли настроить фильтр игр по проценту отыгрыша бонуса?",
+    "expected_answer": "В настоящее время такой фильтр не доступен, но мы рассматриваем добавление функции.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Как пожаловаться на некорректную работу чата в лайв-казино?",
+    "expected_answer": "Свяжитесь с поддержкой и предоставьте скриншоты или видео с проблемой.",
+    "category": "Other.txt"
+  },
+  {
+    "question": "Почему приложение требует доступ к геолокации?",
+    "expected_answer": "Геолокация используется для соблюдения законодательных требований по региону игрока.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Можно ли получить расширенную статистику по своим ставкам?",
+    "expected_answer": "Расширенная статистика доступна в личном кабинете в разделе истории игр.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Почему в демо-режиме выигрыши больше, чем в реальной игре?",
+    "expected_answer": "Демо-режим может иметь повышенный RTP для обучения, реальные игры работают по лицензии.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Как узнать, какие методы пополнения дают дополнительные фриспины?",
+    "expected_answer": "Информация по бонусам за методы пополнения указана в условиях акции в разделе 'Бонусы и акции'.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему при верификации отклоняют фото с временным документом?",
+    "expected_answer": "Временные документы не принимаются, необходимы официальные удостоверяющие личность документы.",
+    "category": "KYC.txt"
+  },
+  {
+    "question": "Можно ли отключить анимацию выигрышей в слотах?",
+    "expected_answer": "Некоторые слоты позволяют отключить анимацию в настройках игры.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Как проверить, что фриспины зачислены правильно?",
+    "expected_answer": "Проверьте раздел бонусов в личном кабинете или обратитесь в поддержку.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему в правилах программы лояльности нет четких условий?",
+    "expected_answer": "Мы постоянно работаем над улучшением условий и публикуем обновления на сайте.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Можно ли запросить детализацию всех выигрышей за месяц?",
+    "expected_answer": "Нет, служба поддержки не предоставляет детализацию, но вы можете ее сделать самостоятельно",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Как пожаловаться на медленную работу службы поддержки?",
+    "expected_answer": "Свяжитесь с руководством поддержки через официальный сайт или через форму обратной связи.",
+    "category": "Other.txt"
+  },
+  {
+    "question": "Почему в некоторых слотах нельзя изменить размер ставки?",
+    "expected_answer": "Правила конкретного слота могут ограничивать изменение ставки во время игры.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Можно ли получить бонус за приглашение друга, если он уже играл?",
+    "expected_answer": "Бонусы за приглашения доступны только для новых игроков, зарегистрировавшихся по вашей ссылке.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему при выводе средств система требует повторную верификацию, хотя я уже проходил её месяц назад?",
+    "expected_answer": "Для безопасности и соответствия законам повторная верификация может потребоваться при крупных суммах.",
+    "category": "KYC.txt"
+  },
+  {
+    "question": "Как узнать, какие слоты имеют функцию \"Buy Bonus\" и как ей правильно пользоваться?",
+    "expected_answer": "Информация о функции \"Buy Bonus\" указана в описании слота и его правилах.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Можно ли отключить всплывающие окна с рекламой новых игр в личном кабинете?",
+    "expected_answer": "На данный момент отключить рекламу нельзя, но можно настроить уведомления.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Почему при отмене депозита деньги возвращаются не на исходную карту, а на бонусный счет?",
+    "expected_answer": "Возврат на бонусный счет происходит согласно правилам платежной системы и сайта.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Как проверить, какие мои ставки учитываются в программе лояльности?",
+    "expected_answer": "В личном кабинете в разделе программы лояльности отображаются все учитываемые ставки.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Можно ли получить компенсацию за время простоя при технических работах на сайте?",
+    "expected_answer": "Компенсация возможна по решению администрации, обращайтесь в поддержку для рассмотрения.",
+    "category": "Other.txt"
+  },
+  {
+    "question": "Почему в некоторых играх live-казино ограничено максимальное время для ставки?",
+    "expected_answer": "Ограничения времени связаны с правилами конкретной игры и организаторами трансляции.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Как узнать, какие провайдеры игр имеют самые высокие RTP в вашем казино?",
+    "expected_answer": "Информацию о провайдерах и их RTP можно найти в описании игр и на сайте казино.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Можно ли временно отключить уведомления о новых акциях без отключения важных оповещений?",
+    "expected_answer": "В настройках уведомлений можно выбрать типы оповещений для получения только важных сообщений.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Почему в правилах турниров не указан точный алгоритм начисления баллов?",
+    "expected_answer": "Алгоритм начисления указан в правилах конкретного турнира, уточняйте в разделе турниров.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Как проверить, что моя ставка в live-рулетке была принята до закрытия ставок?",
+    "expected_answer": "Ставки отображаются в истории игр и подтверждаются системой сразу после принятия.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Почему при выводе через криптовалюту комиссия выше, чем заявлено в правилах?",
+    "expected_answer": "Комиссии зависят от сети блокчейна и могут варьироваться независимо от казино.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Можно ли восстановить историю игр после смены устройства?",
+    "expected_answer": "История игр хранится на сервере и доступна после входа с любого устройства.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Как узнать, какие методы оплаты позволяют получить дополнительные фриспины?",
+    "expected_answer": "Информация об акциях с бонусами за определённые методы оплаты указана в разделе 'Бонусы и акции'.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему в мобильной версии некоторые кнопки в играх не кликабельны?",
+    "expected_answer": "Это может быть связано с особенностями мобильного браузера или приложения. Обновите программу или обратитесь в поддержку.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Можно ли настроить индивидуальные лимиты на разные типы игр?",
+    "expected_answer": "Настройка лимитов возможна через раздел 'Ответственная игра' в вашем профиле.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Можно ли запросить детализацию всех выигрышей за месяц?",
+    "expected_answer": "Да, вы можете запросить детализацию у службы поддержки с указанием нужного периода.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Как пожаловаться на медленную работу службы поддержки?",
+    "expected_answer": "Свяжитесь с руководством поддержки через официальный сайт или через форму обратной связи.",
+    "category": "Other.txt"
+  },
+  {
+    "question": "Почему в некоторых слотах нельзя изменить размер ставки?",
+    "expected_answer": "Правила конкретного слота могут ограничивать изменение ставки во время игры.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Можно ли получить бонус за приглашение друга, если он уже играл?",
+    "expected_answer": "Бонусы за приглашения доступны только для новых игроков, зарегистрировавшихся по вашей ссылке.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему при выводе средств система требует повторную верификацию, хотя я уже проходил её месяц назад?",
+    "expected_answer": "Для безопасности и соответствия законам повторная верификация может потребоваться при крупных суммах.",
+    "category": "KYC.txt"
+  },
+  {
+    "question": "Как узнать, какие слоты имеют функцию \"Buy Bonus\" и как ей правильно пользоваться?",
+    "expected_answer": "Информация о функции \"Buy Bonus\" указана в описании слота и его правилах.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Можно ли отключить всплывающие окна с рекламой новых игр в личном кабинете?",
+    "expected_answer": "На данный момент отключить рекламу нельзя, но можно настроить уведомления.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Почему при отмене депозита деньги возвращаются не на исходную карту, а на бонусный счет?",
+    "expected_answer": "Возврат на бонусный счет происходит согласно правилам платежной системы и сайта.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Как проверить, какие мои ставки учитываются в программе лояльности?",
+    "expected_answer": "В личном кабинете в разделе программы лояльности отображаются все учитываемые ставки.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Можно ли получить компенсацию за время простоя при технических работах на сайте?",
+    "expected_answer": "Компенсация возможна по решению администрации, обращайтесь в поддержку для рассмотрения.",
+    "category": "Other.txt"
+  },
+  {
+    "question": "Почему в некоторых играх live-казино ограничено максимальное время для ставки?",
+    "expected_answer": "Ограничения времени связаны с правилами конкретной игры и организаторами трансляции.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Как узнать, какие провайдеры игр имеют самые высокие RTP в вашем казино?",
+    "expected_answer": "Информацию о провайдерах и их RTP можно найти в описании игр и на сайте казино.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Можно ли временно отключить уведомления о новых акциях без отключения важных оповещений?",
+    "expected_answer": "В настройках уведомлений можно выбрать типы оповещений для получения только важных сообщений.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Почему в правилах турниров не указан точный алгоритм начисления баллов?",
+    "expected_answer": "Алгоритм начисления указан в правилах конкретного турнира, уточняйте в разделе турниров.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Как проверить, что моя ставка в live-рулетке была принята до закрытия ставок?",
+    "expected_answer": "Ставки отображаются в истории игр и подтверждаются системой сразу после принятия.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Почему при выводе через криптовалюту комиссия выше, чем заявлено в правилах?",
+    "expected_answer": "Комиссии зависят от сети блокчейна и могут варьироваться независимо от казино.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Можно ли восстановить историю игр после смены устройства?",
+    "expected_answer": "История игр хранится на сервере и доступна после входа с любого устройства.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Как узнать, какие методы оплаты позволяют получить дополнительные фриспины?",
+    "expected_answer": "Информация об акциях с бонусами за определённые методы оплаты указана в разделе 'Бонусы и акции'.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему в мобильной версии некоторые кнопки в играх не кликабельны?",
+    "expected_answer": "Это может быть связано с особенностями мобильного браузера или приложения. Обновите программу или обратитесь в поддержку.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Можно ли настроить индивидуальные лимиты на разные типы игр?",
+    "expected_answer": "Настройка лимитов возможна через раздел 'Ответственная игра' в вашем профиле.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Как пожаловаться на несоответствие RTP в конкретном слоте?",
+    "expected_answer": "Свяжитесь с поддержкой и предоставьте информацию о несоответствии RTP.",
+    "category": "Other.txt"
+  },
+  {
+    "question": "Почему система блокирует аккаунт при попытке входа с нового IP-адреса?",
+    "expected_answer": "Для безопасности аккаунт может быть временно заблокирован при подозрительной активности.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Можно ли получить статистику по самым крупным выигрышам за год?",
+    "expected_answer": "Такая статистика доступна на сайте в разделе новостей или по запросу в поддержку.",
+    "category": "Other.txt"
+  },
+  {
+    "question": "Почему в условиях фриспинов не указана максимальная сумма вывода?",
+    "expected_answer": "Максимальная сумма может зависеть от конкретной акции, уточняйте в правилах бонуса.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему в мобильном приложении нет истории чата с поддержкой?",
+    "expected_answer": "История чата пока доступна только на сайте, работаем над улучшением мобильного приложения.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Как узнать, какие игры не учитываются в программе лояльности?",
+    "expected_answer": "Список исключённых игр указан в правилах программы лояльности на сайте.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему при выводе требуется подтверждение по SMS, если телефон привязан?",
+    "expected_answer": "Подтверждение по SMS — дополнительная мера безопасности для защиты аккаунта.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Можно ли изменить валюту аккаунта после регистрации?",
+    "expected_answer": "Изменение валюты аккаунта после регистрации невозможно, создайте новый аккаунт с нужной валютой.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Как проверить, что мой отзыв о казино был учтен?",
+    "expected_answer": "Отзывы обрабатываются службой поддержки, по запросу можно получить статус рассмотрения.",
+    "category": "Other.txt"
+  },
+  {
+    "question": "Почему в лайв-дилеры иногда пропадают из трансляции?",
+    "expected_answer": "Перерывы в трансляции могут быть связаны с техническими работами или проблемами со связью.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Можно ли настроить автоповтор последней ставки в слотах?",
+    "expected_answer": "Некоторые слоты поддерживают автоповтор ставки через соответствующую кнопку в интерфейсе игры.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Как узнать, какие турниры доступны для новичков?",
+    "expected_answer": "Информацию о турнирах для новичков можно найти в разделе турниров на сайте.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Почему приложение не запоминает настройки звука?",
+    "expected_answer": "Возможно, требуется обновление приложения или очистка кеша для сохранения настроек.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Можно ли получить бонус за активность в соцсетях казино?",
+    "expected_answer": "Такие бонусы предоставляются по специальным акциям, следите за новостями на сайте.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему в правилах вывода не указаны лимиты для криптовалют?",
+    "expected_answer": "Лимиты для криптовалют зависят от выбранной платежной системы и указаны в её условиях.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Как проверить, что ставка в лайв-казино зарегистрирована?",
+    "expected_answer": "Подтверждение ставки отображается на экране и в истории игры после её принятия системой.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Почему в некоторых играх нельзя поставить меньше минималки?",
+    "expected_answer": "Минимальная ставка устанавливается правилами конкретной игры и не может быть изменена игроком.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Можно ли получить историю всех бонусов за период?",
+    "expected_answer": "Историю бонусов можно посмотреть в личном кабинете в соответствующем разделе.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Как узнать, какие игры учитываются для отыгрыша?",
+    "expected_answer": "Список игр для отыгрыша бонусов указан в правилах конкретного бонуса.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему приложение так быстро разряжает телефон?",
+    "expected_answer": "Высокое потребление энергии связано с графикой и постоянным соединением с сервером.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Как пожаловаться на некорректную работу службы поддержки?",
+    "expected_answer": "Вы можете отправить жалобу через форму обратной связи на сайте или написать напрямую в службу поддержки.",
+    "category": "Other.txt"
+  },
+  {
+    "question": "Почему не получается сменить пароль через личный кабинет?",
+    "expected_answer": "Возможны временные технические неполадки, попробуйте позже или обратитесь в поддержку.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Можно ли восстановить удаленный аккаунт?",
+    "expected_answer": "Восстановление возможно в течение определенного времени после удаления, обратитесь в поддержку для уточнения сроков.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Почему не приходит код подтверждения по SMS?",
+    "expected_answer": "Проверьте корректность номера, наличие сигнала и попробуйте запросить код повторно через некоторое время.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Как узнать, какие способы оплаты доступны в моей стране?",
+    "expected_answer": "Список доступных способов оплаты зависит от региона и отображается при пополнении счета в личном кабинете.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Можно ли вывести деньги на карту другого человека?",
+    "expected_answer": "Вывод средств возможен только на карты и счета, зарегистрированные на имя владельца аккаунта.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Как изменить данные паспорта после регистрации?",
+    "expected_answer": "Для изменения данных паспорта обратитесь в службу поддержки с соответствующими документами.",
+    "category": "KYC.txt"
+  },
+  {
+    "question": "Почему заблокировали аккаунт без предупреждения?",
+    "expected_answer": "Аккаунт может быть заблокирован за нарушение правил, о чем уведомление высылается на электронную почту.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Можно ли играть без прохождения верификации?",
+    "expected_answer": "Без верификации доступны ограниченные функции, для полного доступа необходимо подтвердить личность.",
+    "category": "KYC.txt"
+  },
+  {
+    "question": "Как быстро обрабатываются заявки на вывод средств?",
+    "expected_answer": "Заявки обрабатываются в течение 1-24 часов в зависимости от способа вывода и загруженности службы.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Можно ли сменить номер телефона без верификации?",
+    "expected_answer": "Для безопасности смена номера возможна только после прохождения верификации личности.",
+    "category": "KYC.txt"
+  },
+  {
+    "question": "Как отключить уведомления на почту и телефон?",
+    "expected_answer": "Вы можете настроить уведомления в разделе 'Настройки' личного кабинета.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Можно ли объединить несколько бонусов для игры?",
+    "expected_answer": "Одновременное использование нескольких бонусов ограничено правилами акций, уточняйте условия конкретных предложений.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему промокод не активируется при вводе?",
+    "expected_answer": "Проверьте срок действия промокода и условия его использования.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Как проверить историю использованных промокодов?",
+    "expected_answer": "История промокодов доступна в личном кабинете в разделе 'Бонусы и акции'.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему не работает чат поддержки?",
+    "expected_answer": "Возможно временные технические неполадки, попробуйте позже или свяжитесь с поддержкой через альтернативные каналы.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Можно ли играть в казино без регистрации?",
+    "expected_answer": "Для полноценной игры и вывода средств регистрация обязательна, демо-режим доступен без регистрации.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Как получить консультацию по бонусам?",
+    "expected_answer": "Консультацию можно получить в службе поддержки или через раздел 'Бонусы и акции' на сайте.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Можно ли временно заморозить аккаунт?",
+    "expected_answer": "Вы можете обратиться в поддержку для временной блокировки аккаунта на необходимый срок.",
+    "category": "Other.txt"
+  },
+  {
+    "question": "Как узнать срок действия бонуса?",
+    "expected_answer": "Срок действия бонуса указан в условиях акции и доступен в личном кабинете.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему у меня не начисляется кэшбэк?",
+    "expected_answer": "Кэшбэк начисляется согласно условиям акции и при выполнении требований по ставкам.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Можно ли играть на демо без регистрации?",
+    "expected_answer": "Да, демо-режим доступен без регистрации для ознакомления с играми.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Как поставить лимит на депозит?",
+    "expected_answer": "Лимит на депозит можно установить в разделе 'Ответственная игра' или обратившись в поддержку.",
+    "category": "Other.txt"
+  },
+  {
+    "question": "Где посмотреть, сколько я проиграл за всё время?",
+    "expected_answer": "Информация о проигрышах доступна в истории счета в личном кабинете.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Можно ли отправить выигрыш другому игроку?",
+    "expected_answer": "Переводы между игроками не предусмотрены в системе, вывод доступен только на ваши реквизиты.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Почему мой друг выигрывает больше, хотя мы играем в одну и ту же игру?",
+    "expected_answer": "Выигрыши зависят от случайности и ставок, результаты игр независимы друг от друга.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Можно ли играть без полной верификации?",
+    "expected_answer": "Без полной верификации доступны ограниченные функции, для вывода средств требуется подтверждение личности.",
+    "category": "KYC.txt"
+  },
+  {
+    "question": "Как включить уведомления от казино?",
+    "expected_answer": "Уведомления можно включить в настройках личного кабинета.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Можно ли накопить фриспины и использовать их позже?",
+    "expected_answer": "Фриспины обычно действуют в течение ограниченного времени, условия указаны в акции.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему у меня заблокировали вывод?",
+    "expected_answer": "Блокировка вывода может быть связана с необходимостью прохождения верификации или нарушением правил.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Как проверить, что мой аккаунт не взломан?",
+    "expected_answer": "Следите за активностью в аккаунте и меняйте пароли регулярно. В случае подозрений обращайтесь в поддержку.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Можно ли сменить email, если я забыл пароль?",
+    "expected_answer": "Для смены email потребуется восстановление доступа к аккаунту через поддержку.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Почему промокод сгорает, если не использовать вовремя?",
+    "expected_answer": "Промокоды имеют срок действия, после которого автоматически становятся недействительными.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Как быстро обрабатываются депозиты?",
+    "expected_answer": "Депозиты обычно обрабатываются мгновенно, иногда возможны задержки до нескольких минут.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Можно ли участвовать в акции с нескольких аккаунтов?",
+    "expected_answer": "Использование нескольких аккаунтов для одной акции запрещено правилами и может привести к блокировке.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Почему при выводе через криптовалюту комиссия выше, чем заявлено в правилах?",
+    "expected_answer": "Комиссия зависит от текущих условий сети блокчейна и может меняться независимо от правил казино.",
+    "category": "Terms.txt"
+  },
+  {
+    "question": "Можно ли восстановить историю игр после смены устройства?",
+    "expected_answer": "История игр хранится в аккаунте и доступна с любого устройства после входа в личный кабинет.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Как узнать, какие методы оплаты позволяют получить дополнительные фриспины?",
+    "expected_answer": "Информация о специальных предложениях доступна в разделе 'Акции' на сайте.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему в мобильной версии некоторые кнопки в играх не кликабельны?",
+    "expected_answer": "Это может быть связано с техническими особенностями мобильной версии или багами, рекомендуем обновить приложение.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Можно ли настроить индивидуальные лимиты на разные типы игр?",
+    "expected_answer": "Такая настройка доступна через службу поддержки по запросу игрока.",
+    "category": "Other.txt"
+  },
+  {
+    "question": "Как пожаловаться на некорректную работу бонусного раунда в слоте?",
+    "expected_answer": "Свяжитесь с поддержкой и опишите проблему, приложите скриншоты или видео, если возможно.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему приложение требует доступ к камере при входе в аккаунт?",
+    "expected_answer": "Доступ к камере нужен для верификации личности и обеспечения безопасности аккаунта.",
+    "category": "KYC.txt"
+  },
+  {
+    "question": "Можно ли получить детализацию всех отыгранных бонусов за полгода?",
+    "expected_answer": "Запрос детализации можно отправить в службу поддержки, которая предоставит нужную информацию.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему в демо-версии некоторых слотов недоступны все функции?",
+    "expected_answer": "Демо-версии имеют ограниченный функционал для ознакомления с игрой без риска.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Как узнать, какие игры участвуют в акции \"Удвоение депозита\" в текущий момент?",
+    "expected_answer": "Информация об участвующих играх указана в условиях акции на сайте.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему при верификации не принимают фотографию паспорта с подсветкой?",
+    "expected_answer": "Фото должно быть четким без бликов и отражений, которые мешают прочтению данных.",
+    "category": "KYC.txt"
+  },
+  {
+    "question": "Можно ли отключить автоматическое вращение барабанов в слотах?",
+    "expected_answer": "В настройках игры можно отключить автоигру и управлять вращениями вручную.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Как проверить, что мой депозит участвует в акции с кэшбэком?",
+    "expected_answer": "Статус участия можно проверить в личном кабинете или обратиться в поддержку.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему в правилах отыгрыша бонуса не указано, какие именно ставки учитываются?",
+    "expected_answer": "Подробности ставок для отыгрыша указаны в условиях конкретного бонуса, ознакомьтесь с ними внимательно.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Можно ли запросить видео-подтверждение результатов live-игры?",
+    "expected_answer": "Такие запросы рассматриваются индивидуально через службу поддержки.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Как пожаловаться на некорректное начисление баллов в программе лояльности?",
+    "expected_answer": "Обратитесь в поддержку с описанием проблемы и деталями аккаунта.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему в некоторых слотах недоступна функция \"Турбо-режим\"?",
+    "expected_answer": "Не все слоты поддерживают турбо-режим, это зависит от разработчика игры.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Можно ли получить бонус за подписку на все соцсети казино?",
+    "expected_answer": "Подарки за подписку доступны по специальным акциям, следите за новостями на сайте.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Почему в условиях акции не указано ограничение по количеству участников?",
+    "expected_answer": "Ограничения могут отсутствовать или указываться в дополнительных правилах акции.",
+    "category": "BonusesAndPromotions.txt"
+  },
+  {
+    "question": "Как узнать, какие игры имеют настраиваемые линии выплат?",
+    "expected_answer": "Информация об игровых линиях доступна в описании конкретной игры.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Почему при выводе через электронный кошелек требуется дополнительная проверка?",
+    "expected_answer": "Дополнительная проверка безопасности проводится для предотвращения мошенничества.",
+    "category": "KYC.txt"
+  },
+  {
+    "question": "Можно ли восстановить удаленную историю чата с поддержкой?",
+    "expected_answer": "История чата не сохраняется долго, рекомендуем сохранять важные сообщения самостоятельно.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Как проверить, какие турниры учитываются в моей статистике?",
+    "expected_answer": "В личном кабинете доступна информация по активным и завершённым турнирам.",
+    "category": "Games.txt"
+  },
+  {
+    "question": "Почему в мобильном приложении не работает функция поиска по играм?",
+    "expected_answer": "Возможны технические работы или баги, рекомендуем обновить приложение или обратиться в поддержку.",
+    "category": "SiteNavigation.txt"
+  },
+  {
+    "question": "Можно ли настроить разные лимиты для будних и выходных дней?",
+    "expected_answer": "Такие настройки доступны по запросу в службу поддержки для ответственной игры.",
+    "category": "Other.txt"
   }
 ]
-
-
-
-
