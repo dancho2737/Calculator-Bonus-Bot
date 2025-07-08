@@ -4,13 +4,14 @@ import json
 import os
 import random
 
-from telegram import Update, ReplyKeyboardMarkup
+from telegram import Update
 from telegram.ext import (
     ApplicationBuilder, CommandHandler, ContextTypes,
     MessageHandler, filters, ConversationHandler
 )
 
 import openai
+from prompts import TRAINING_PROMPT  # импорт промпта из prompts.py
 
 # === CONFIG ===
 BOT_TOKEN = os.environ["BOT_TOKEN"]
@@ -67,66 +68,50 @@ def init_db():
     conn.commit()
     conn.close()
 
-# === LOAD SCENARIOS & RULES ===
+# === LOAD SCENARIOS ===
 def load_scenarios():
     with open(SCENARIO_FILE, encoding='utf-8') as f:
         data = json.load(f)
     random.shuffle(data)
     return data
 
-def load_rules():
-    rules = {}
-    for filename in os.listdir(RULES_FOLDER):
-        if filename.endswith(".txt"):
-            category = filename.replace(".txt", "")
-            with open(os.path.join(RULES_FOLDER, filename), encoding="utf-8") as f:
-                rules[category] = f.read()
-    return rules
-
-RULES_BY_CATEGORY = load_rules()
-
-# === OPENAI ===
+# === OPENAI EVALUATION ===
 async def evaluate_answer(entry, user_answer):
+    """
+    Формируем полный промпт из TRAINING_PROMPT, подставляя вопрос и эталонный ответ.
+    Добавляем ответ оператора в конец, отправляем на оценку.
+    """
     question = entry["question"]
-    expected_skill = entry["expected_skill"]
-    category = entry["category"]
-    rules = RULES_BY_CATEGORY.get(category, "")[:3000]
+    expected_answer = entry["expected_answer"]
 
-    prompt = f"""
-Вопрос пользователя: {question}
-Ответ оператора: {user_answer}
-Навык: {expected_skill}
-Категория: {category}
-
-Правила:
-{rules}
-
-Дай честную оценку в формате JSON:
-{{
-  "evaluation": "correct|partial|incorrect",
-  "reason": "пояснение почему такая оценка",
-  "grammar_issues": "замечания по русскому языку",
-  "correct_answer": "пример корректного ответа",
-  "clarification": "уточняющий вопрос, если ответ неверный"
-}}
-Если ответ почти правильный — оценивай как "correct".
-"""
+    # Формируем промпт, подставляя question и expected_answer
+    prompt = TRAINING_PROMPT.format(question=question, expected_answer=expected_answer)
+    # Добавляем ответ оператора для оценки
+    prompt += f"\n\nОтвет оператора:\n{user_answer}"
 
     try:
         response = await openai.ChatCompletion.acreate(
             model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}]
+            messages=[
+                {"role": "system", "content": "Ты — ассистент для оценки ответов операторов."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=300,
+            temperature=0
         )
-        content = response["choices"][0]["message"]["content"]
-        return json.loads(content)
-    except Exception as e:
-        logger.error(f"Ошибка ИИ: {e}")
+        content = response["choices"][0]["message"]["content"].strip()
+
+        # Попытка выделить ключевые оценки из текста (если нужно можно усложнить парсинг)
+        # Для простоты, возвращаем просто весь текст оценки
         return {
-            "evaluation": "incorrect",
-            "reason": "ИИ не ответил",
-            "grammar_issues": "",
-            "correct_answer": "",
-            "clarification": "ИИ временно недоступен. Попробуйте позже."
+            "evaluation_text": content,
+            "evaluation_simple": None  # Можно позже доработать парсер оценки
+        }
+    except Exception as e:
+        logger.error(f"OpenAI error: {e}")
+        return {
+            "evaluation_text": "Ошибка при оценке ИИ. Попробуйте позже.",
+            "evaluation_simple": "incorrect"
         }
 
 # === AUTH FLOW ===
@@ -135,12 +120,12 @@ async def auth(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return LOGIN
 
 async def login_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.user_data["login"] = update.message.text
+    context.user_data["login"] = update.message.text.strip()
     await update.message.reply_text("Введите пароль:")
     return PASSWORD_STATE
 
 async def password_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    password = update.message.text
+    password = update.message.text.strip()
     user_id = update.effective_user.id
     login = context.user_data.get("login")
     username = update.effective_user.username
@@ -156,7 +141,7 @@ async def password_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
             session[user_id] = {"authenticated": True}
             await update.message.reply_text("Успешный вход. Напишите /start для начала.")
         else:
-            await update.message.reply_text("Неверный пароль.")
+            await update.message.reply_text("Неверный пароль. Попробуйте снова через /auth.")
     else:
         c.execute("INSERT INTO users (user_id, username, login, password) VALUES (?, ?, ?, ?)",
                   (user_id, username, login, password))
@@ -166,12 +151,12 @@ async def password_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.close()
     return ConversationHandler.END
 
-# === ТРЕНИРОВКА ===
+# === TRAINING FLOW ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_id not in session or not session[user_id].get("authenticated"):
         await update.message.reply_text("Сначала авторизуйтесь через /auth.")
-        return
+        return ConversationHandler.END
 
     scenario = load_scenarios()
     session[user_id]["scenario"] = scenario
@@ -202,40 +187,55 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     answer = update.message.text.strip()
     entry = session[user_id]["current"]
+
+    # Обработка команды /answer
+    if answer.lower() == "/answer":
+        await update.message.reply_text(f"Правильный ответ:\n{entry['expected_answer']}")
+        return
+
+    # Оценка ИИ
     result = await evaluate_answer(entry, answer)
+    evaluation_text = result["evaluation_text"]
 
-    evaluation = result["evaluation"]
-    correct = result.get("correct_answer", "")
-    clarification = result.get("clarification", "")
-    grammar = result.get("grammar_issues", "")
-    reason = result.get("reason", "")
+    # Запись лога и подсчёт (упрощённо: ищем ключевые слова в тексте оценки)
+    evaluation_simple = None
+    if "полностью верно" in evaluation_text.lower() or "✅" in evaluation_text:
+        evaluation_simple = "correct"
+    elif "частично верно" in evaluation_text.lower() or "⚠️" in evaluation_text:
+        evaluation_simple = "partial"
+    else:
+        evaluation_simple = "incorrect"
 
+    # Запоминаем последний ответ и оценку
     session[user_id]["last"] = {
         "question": entry["question"],
         "answer": answer,
-        "evaluation": evaluation,
-        "correct_answer": correct
+        "evaluation": evaluation_simple,
+        "correct_answer": entry["expected_answer"]
     }
 
+    # Записываем в базу
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute("""
         INSERT INTO logs (user_id, question, answer, evaluation, grammar_issues, correct_answer)
         VALUES (?, ?, ?, ?, ?, ?)
-    """, (user_id, entry["question"], answer, evaluation, grammar, correct))
+    """, (user_id, entry["question"], answer, evaluation_simple, "", entry["expected_answer"]))
     conn.commit()
     conn.close()
 
-    session[user_id]["score"][evaluation] += 1
+    # Обновляем счёт
+    session[user_id]["score"][evaluation_simple] += 1
 
-    if evaluation == "correct":
-        await update.message.reply_text("✅ Верно!")
+    # Ответ пользователю по оценке
+    if evaluation_simple == "correct":
+        await update.message.reply_text(f"✅ Верно!\n\nКомментарий ИИ:\n{evaluation_text}")
         session[user_id]["step"] += 1
         await ask_next(update, context)
-    elif evaluation == "partial":
-        await update.message.reply_text("🟡 Почти правильно. Попробуй дополнить.")
+    elif evaluation_simple == "partial":
+        await update.message.reply_text(f"🟡 Почти правильно.\n\nКомментарий ИИ:\n{evaluation_text}")
     else:
-        await update.message.reply_text(f"❌ Не совсем то. {clarification or 'Попробуй иначе.'}")
+        await update.message.reply_text(f"❌ Не совсем.\n\nКомментарий ИИ:\n{evaluation_text}")
 
 async def show_correct(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -247,7 +247,7 @@ async def show_correct(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    score = session.get(user_id, {}).get("score", {})
+    score = session.get(user_id, {}).get("score", {"correct":0,"partial":0,"incorrect":0})
     msg = (f"📊 Статистика:\n"
            f"✅ Верных: {score.get('correct', 0)}\n"
            f"🟡 Частично: {score.get('partial', 0)}\n"
