@@ -24,7 +24,7 @@ RULES_FOLDER = "rules"
 PASSWORD = "starzbot"
 
 # === STATES ===
-AUTH, LOGIN, PASSWORD_STATE, AWAITING_ANSWER = range(4)
+PASSWORD_STATE, LOGIN, AWAITING_ANSWER = range(3)
 
 # === LOGGER ===
 logging.basicConfig(level=logging.INFO)
@@ -94,7 +94,6 @@ async def evaluate_answer(entry, user_answer):
             temperature=0
         )
         content = response["choices"][0]["message"]["content"].strip()
-
         return {
             "evaluation_text": content,
             "evaluation_simple": None
@@ -107,19 +106,23 @@ async def evaluate_answer(entry, user_answer):
         }
 
 # === AUTH FLOW ===
-async def auth(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Введите логин:")
-    return LOGIN
 
-async def login_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.user_data["login"] = update.message.text.strip()
-    await update.message.reply_text("Введите пароль:")
+async def auth(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("🔐 Введите пароль:")
     return PASSWORD_STATE
 
 async def password_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
     password = update.message.text.strip()
+    if password == PASSWORD:
+        await update.message.reply_text("✅ Пароль принят! Теперь введите логин:")
+        return LOGIN
+    else:
+        await update.message.reply_text("❌ Неверный пароль. Попробуйте снова через /auth.")
+        return ConversationHandler.END
+
+async def login_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    login = update.message.text.strip()
     user_id = update.effective_user.id
-    login = context.user_data.get("login")
     username = update.effective_user.username
 
     conn = sqlite3.connect(DB_FILE)
@@ -128,17 +131,16 @@ async def password_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
     existing = c.fetchone()
 
     if existing:
-        c.execute("SELECT * FROM users WHERE user_id=? AND password=?", (user_id, password))
-        if c.fetchone():
-            session[user_id] = {"authenticated": True}
-            await update.message.reply_text("Успешный вход. Напишите /start для начала.")
-        else:
-            await update.message.reply_text("Неверный пароль. Попробуйте снова через /auth.")
+        # Пользователь уже есть — просто авторизуем
+        session[user_id] = {"authenticated": True}
+        await update.message.reply_text("Вход выполнен успешно. Напишите /start для начала.")
     else:
+        # Регистрация нового пользователя
         c.execute("INSERT INTO users (user_id, username, login, password) VALUES (?, ?, ?, ?)",
-                  (user_id, username, login, password))
+                  (user_id, username, login, PASSWORD))  # Сохраняем пароль "starzbot"
         session[user_id] = {"authenticated": True}
         await update.message.reply_text("Регистрация успешна. Напишите /start для начала.")
+
     conn.commit()
     conn.close()
     return ConversationHandler.END
@@ -180,6 +182,7 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
     answer = update.message.text.strip()
     entry = session[user_id]["current"]
 
+    # Обработка команды /answer
     if answer.lower() == "/answer":
         await update.message.reply_text(f"Правильный ответ:\n{entry['expected_answer']}")
         return
@@ -254,22 +257,6 @@ async def report_error(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.close()
     await update.message.reply_text("Жалоба отправлена.")
 
-# === NEW: Проверка работы OpenAI ===
-async def check_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        test_prompt = "Привет! Это тест, работает ли OpenAI."
-        response = await openai.ChatCompletion.acreate(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": test_prompt}],
-            max_tokens=50,
-            temperature=0
-        )
-        answer = response["choices"][0]["message"]["content"].strip()
-        await update.message.reply_text(f"OpenAI работает! Ответ:\n{answer}")
-    except Exception as e:
-        logger.error(f"OpenAI check error: {e}")
-        await update.message.reply_text("OpenAI не отвечает. Попробуйте позже.")
-
 # === MAIN ===
 if __name__ == '__main__':
     init_db()
@@ -278,8 +265,8 @@ if __name__ == '__main__':
     auth_conv = ConversationHandler(
         entry_points=[CommandHandler("auth", auth)],
         states={
-            LOGIN: [MessageHandler(filters.TEXT & ~filters.COMMAND, login_input)],
             PASSWORD_STATE: [MessageHandler(filters.TEXT & ~filters.COMMAND, password_input)],
+            LOGIN: [MessageHandler(filters.TEXT & ~filters.COMMAND, login_input)],
         },
         fallbacks=[],
     )
@@ -289,7 +276,6 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler("stop", stop))
     app.add_handler(CommandHandler("answer", show_correct))
     app.add_handler(CommandHandler("error", report_error))
-    app.add_handler(CommandHandler("check_ai", check_ai))  # новая команда проверки AI
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, process))
 
     app.run_polling()
