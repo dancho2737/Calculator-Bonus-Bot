@@ -172,7 +172,7 @@ async def register_pass(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     c.execute("SELECT * FROM users WHERE login=?", (login,))
     if c.fetchone():
-        await update.message.reply_text("❌ Такой логин уже существует. Введите другой логин /auth для начала.")
+        await update.message.reply_text("❌ Такой логин уже существует. Введите другой логин или начните заново через /auth.")
         conn.close()
         return ConversationHandler.END
 
@@ -181,7 +181,7 @@ async def register_pass(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.commit()
     conn.close()
 
-    session[user_id] = {"authenticated": True, "login": login, "training_active": False}
+    session[user_id] = {"authenticated": True, "login": login}
     await update.message.reply_text("✅ Регистрация успешна! Напишите /start для начала тренировки.")
     return ConversationHandler.END
 
@@ -205,7 +205,7 @@ async def login_pass(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.close()
 
     if user:
-        session[user_id] = {"authenticated": True, "login": login, "training_active": False}
+        session[user_id] = {"authenticated": True, "login": login}
         await update.message.reply_text("✅ Вход выполнен успешно! Напишите /start для начала тренировки.")
         return ConversationHandler.END
     else:
@@ -219,11 +219,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Сначала авторизуйтесь через /auth.")
         return ConversationHandler.END
 
+    # Если пользователь в админ режиме, убираем этот флаг для продолжения тренировки
+    if session[user_id].get("is_admin_conversation"):
+        session[user_id]["is_admin_conversation"] = False
+
     scenario = load_scenarios()
     session[user_id]["scenario"] = scenario
     session[user_id]["step"] = 0
-    session[user_id]["score"] = {"correct": 0, "incorrect": 0}
-    session[user_id]["training_active"] = True
+    session[user_id]["score"] = {"correct": 0, "partial": 0, "incorrect": 0}
 
     await ask_next(update, context)
     return AWAITING_ANSWER
@@ -235,7 +238,6 @@ async def ask_next(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if step >= len(scenario):
         await update.message.reply_text("✅ Тренировка завершена. Введите /stop для просмотра статистики.")
-        session[user_id]["training_active"] = False
         return ConversationHandler.END
 
     current = scenario[step]
@@ -247,12 +249,12 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     text = update.message.text.strip()
 
-    # Если в админ-конверсии, пропускаем обработку
-    if session.get(user_id, {}).get("is_admin_conversation", False):
+    if user_id not in session or "current" not in session[user_id]:
+        await update.message.reply_text("Сначала напишите /start.")
         return
 
-    # Проверяем активность тренировки
-    if user_id not in session or not session[user_id].get("training_active", False):
+    # Если пользователь в админ режиме — не обрабатываем ответы
+    if session.get(user_id, {}).get("is_admin_conversation", False):
         await update.message.reply_text("Тренировка неактивна. Напишите /start для начала.")
         return
 
@@ -287,7 +289,7 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     evaluation_text = await evaluate_answer(entry, text)
 
-    # Простая классификация по тексту ответа ИИ
+    # Простая классификация по тексту ответа ИИ (можно улучшить)
     evaluation_simple = "incorrect"
     lower_eval = evaluation_text.lower()
     if "полностью верно" in lower_eval or "✅" in evaluation_text:
@@ -314,8 +316,6 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.close()
 
     # Счётчик
-    if evaluation_simple not in session[user_id]["score"]:
-        session[user_id]["score"][evaluation_simple] = 0
     session[user_id]["score"][evaluation_simple] += 1
 
     if evaluation_simple == "correct":
@@ -327,7 +327,7 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text(f"❌ Не совсем.\n\nКомментарий ИИ:\n{evaluation_text}")
 
-# === /stop — показать статистику и закончить тренировку ===
+# === /stop — показать статистику ===
 async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     score = session.get(user_id, {}).get("score", {"correct":0,"partial":0,"incorrect":0})
@@ -336,9 +336,6 @@ async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
            f"🟡 Частично верных: {score.get('partial', 0)}\n"
            f"❌ Неверных: {score.get('incorrect', 0)}")
     await update.message.reply_text(msg)
-    # Останавливаем тренировку
-    if user_id in session:
-        session[user_id]["training_active"] = False
 
 # === /answer — показать последний правильный ответ ===
 async def show_correct(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -367,29 +364,41 @@ async def report_error(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # === /admin — админ команда с паролем ===
 async def admin_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    session.setdefault(user_id, {})
-    session[user_id]["is_admin_conversation"] = True  # Вход в админ диалог
     await update.message.reply_text("Введите пароль администратора:")
     return ADMIN_PASS
 
 async def admin_pass_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
     password = update.message.text.strip()
     user_id = update.effective_user.id
+
     if password == ADMIN_PASSWORD:
         session.setdefault(user_id, {})
         session[user_id]["is_admin_conversation"] = True
         session[user_id]["is_admin"] = True
-        await update.message.reply_text("Доступ к административным командам предоставлен.\n"
-                                        "Доступны команды:\n"
-                                        "/mistake - показать ошибки\n"
-                                        "/done <ID> - пометить ошибку решённой")
+        await update.message.reply_text(
+            "Доступ к административным командам предоставлен.\n"
+            "Доступны команды:\n"
+            "/mistake - показать ошибки\n"
+            "/done <ID> - пометить ошибку решённой\n"
+            "/exit - выйти из режима администратора"
+        )
         return ADMIN_CMD
     else:
-        session.setdefault(user_id, {})
-        session[user_id]["is_admin_conversation"] = False
+        # Сбрасываем флаг админ-режима
+        if user_id in session:
+            session[user_id]["is_admin_conversation"] = False
+            session[user_id]["is_admin"] = False
         await update.message.reply_text("Неверный пароль администратора.")
         return ConversationHandler.END
+
+# Команда выхода из админ-режима
+async def admin_exit(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    if user_id in session:
+        session[user_id]["is_admin_conversation"] = False
+        session[user_id]["is_admin"] = False
+    await update.message.reply_text("Выход из режима администратора. Напишите /start для начала тренировки.")
+    return ConversationHandler.END
 
 # Показать ошибки /mistake
 async def show_mistakes(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -442,6 +451,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/answer - показать правильный ответ на последний вопрос\n"
         "/error - отправить жалобу на последний ответ\n"
         "/admin - вход в админ-панель (требуется пароль)\n"
+        "/exit - выйти из админ-режима\n"
         # Команды /mistake и /done доступны только админам
     )
     await update.message.reply_text(msg)
@@ -471,6 +481,13 @@ def main():
     )
     app.add_handler(auth_conv)
 
+    # Тренировка
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("stop", stop))
+    app.add_handler(CommandHandler("answer", show_correct))
+    app.add_handler(CommandHandler("error", report_error))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, process))
+
     # Админ панель
     admin_conv = ConversationHandler(
         entry_points=[CommandHandler("admin", admin_start)],
@@ -478,20 +495,15 @@ def main():
             ADMIN_PASS: [MessageHandler(filters.TEXT & ~filters.COMMAND, admin_pass_input)],
             ADMIN_CMD: [
                 CommandHandler("mistake", show_mistakes),
-                CommandHandler("done", done_mistake)
+                CommandHandler("done", done_mistake),
+                CommandHandler("exit", admin_exit),
+                CommandHandler("cancel", admin_exit)
             ]
         },
         fallbacks=[],
         allow_reentry=True,
     )
     app.add_handler(admin_conv)
-
-    # Тренировка и команды
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("stop", stop))
-    app.add_handler(CommandHandler("answer", show_correct))
-    app.add_handler(CommandHandler("error", report_error))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, process))
 
     # Помощь и неизвестные
     app.add_handler(CommandHandler("help", help_command))
