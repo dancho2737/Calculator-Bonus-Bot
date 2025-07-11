@@ -222,7 +222,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     scenario = load_scenarios()
     session[user_id]["scenario"] = scenario
     session[user_id]["step"] = 0
-    session[user_id]["score"] = {"correct": 0, "partial": 0, "incorrect": 0}
+    session[user_id]["score"] = {"correct": 0, "incorrect": 0}
 
     await ask_next(update, context)
     return AWAITING_ANSWER
@@ -258,12 +258,6 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("Нет правильного ответа для показа.")
         return
 
-    if text.lower() == "/skip":
-        session[user_id]["step"] += 1
-        await ask_next(update, context)
-        return
-
-
     if text.lower() == "/error":
         # Добавляем последний ответ в ошибки
         last = session.get(user_id, {}).get("last")
@@ -286,13 +280,15 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     evaluation_text = await evaluate_answer(entry, text)
 
-    # Простая классификация по тексту ответа ИИ (можно улучшить)
-    evaluation_simple = "incorrect"
+    # Простая классификация по тексту ответа ИИ
     lower_eval = evaluation_text.lower()
     if "полностью верно" in lower_eval or "✅" in evaluation_text:
         evaluation_simple = "correct"
     elif "частично верно" in lower_eval or "⚠️" in evaluation_text:
-        evaluation_simple = "partial"
+        # Теперь считаем частично верно как correct
+        evaluation_simple = "correct"
+    else:
+        evaluation_simple = "incorrect"
 
     # Сохраняем ответ
     session[user_id]["last"] = {
@@ -312,25 +308,28 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.commit()
     conn.close()
 
-    # Счётчик
+    # Инициализация счетчика, если еще нет
+    if "score" not in session[user_id]:
+        session[user_id]["score"] = {"correct": 0, "incorrect": 0}
+
+    session[user_id]["score"].setdefault("correct", 0)
+    session[user_id]["score"].setdefault("incorrect", 0)
+
     session[user_id]["score"][evaluation_simple] += 1
 
     if evaluation_simple == "correct":
         await update.message.reply_text(f"✅ Верно!\n\nКомментарий ИИ:\n{evaluation_text}")
         session[user_id]["step"] += 1
         await ask_next(update, context)
-    elif evaluation_simple == "partial":
-        await update.message.reply_text(f"🟡 Почти правильно.\n\nКомментарий ИИ:\n{evaluation_text}")
     else:
         await update.message.reply_text(f"❌ Не совсем.\n\nКомментарий ИИ:\n{evaluation_text}")
 
 # === /stop — показать статистику ===
 async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    score = session.get(user_id, {}).get("score", {"correct":0,"partial":0,"incorrect":0})
+    score = session.get(user_id, {}).get("score", {"correct":0,"incorrect":0})
     msg = (f"📊 Статистика:\n"
            f"✅ Верных: {score.get('correct', 0)}\n"
-           f"🟡 Частично верных: {score.get('partial', 0)}\n"
            f"❌ Неверных: {score.get('incorrect', 0)}")
     await update.message.reply_text(msg)
 
@@ -427,7 +426,6 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/start - начать тренировку\n"
         "/stop - остановить тренировку и показать статистику\n"
         "/answer - показать правильный ответ на последний вопрос\n"
-        "/skip - пропустить текущий вопрос\n"
         "/error - отправить жалобу на последний ответ\n"
         "/admin - вход в админ-панель (требуется пароль)\n"
         # Команды /mistake и /done доступны только админам
