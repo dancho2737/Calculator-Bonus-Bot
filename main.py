@@ -259,8 +259,8 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if text.lower() == "/skip":
-    session[user_id]["step"] += 1
-            await ask_next(update, context)
+        session[user_id]["step"] += 1
+        await ask_next(update, context)
         return
 
 
