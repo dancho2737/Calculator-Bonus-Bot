@@ -172,7 +172,7 @@ async def register_pass(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     c.execute("SELECT * FROM users WHERE login=?", (login,))
     if c.fetchone():
-        await update.message.reply_text("❌ Такой логин уже существует. Введите другой логин /auth для начала.")
+        await update.message.reply_text("❌ Такой логин уже существует. Введите другой логин или начните заново через /auth.")
         conn.close()
         return ConversationHandler.END
 
@@ -223,6 +223,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     session[user_id]["scenario"] = scenario
     session[user_id]["step"] = 0
     session[user_id]["score"] = {"correct": 0, "incorrect": 0}
+    session[user_id]["training_active"] = True  # Флаг начала тренировки
 
     await ask_next(update, context)
     return AWAITING_ANSWER
@@ -234,6 +235,7 @@ async def ask_next(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if step >= len(scenario):
         await update.message.reply_text("✅ Тренировка завершена. Введите /stop для просмотра статистики.")
+        session[user_id]["training_active"] = False  # Флаг окончания тренировки
         return ConversationHandler.END
 
     current = scenario[step]
@@ -245,8 +247,9 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     text = update.message.text.strip()
 
-    if user_id not in session or "current" not in session[user_id]:
-        await update.message.reply_text("Сначала напишите /start.")
+    # Проверяем, активна ли тренировка
+    if user_id not in session or not session[user_id].get("training_active", False):
+        await update.message.reply_text("Тренировка неактивна. Напишите /start для начала.")
         return
 
     # Обработка команд
@@ -280,15 +283,13 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     evaluation_text = await evaluate_answer(entry, text)
 
-    # Простая классификация по тексту ответа ИИ
+    # Простая классификация по тексту ответа ИИ (можно улучшить)
+    evaluation_simple = "incorrect"
     lower_eval = evaluation_text.lower()
     if "полностью верно" in lower_eval or "✅" in evaluation_text:
         evaluation_simple = "correct"
     elif "частично верно" in lower_eval or "⚠️" in evaluation_text:
-        # Теперь считаем частично верно как correct
-        evaluation_simple = "correct"
-    else:
-        evaluation_simple = "incorrect"
+        evaluation_simple = "partial"  # можно игнорировать в подсчётах, если надо
 
     # Сохраняем ответ
     session[user_id]["last"] = {
@@ -308,28 +309,27 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.commit()
     conn.close()
 
-    # Инициализация счетчика, если еще нет
-    if "score" not in session[user_id]:
-        session[user_id]["score"] = {"correct": 0, "incorrect": 0}
-
-    session[user_id]["score"].setdefault("correct", 0)
-    session[user_id]["score"].setdefault("incorrect", 0)
-
-    session[user_id]["score"][evaluation_simple] += 1
+    # Счётчик
+    session[user_id]["score"][evaluation_simple] = session[user_id]["score"].get(evaluation_simple, 0) + 1
 
     if evaluation_simple == "correct":
         await update.message.reply_text(f"✅ Верно!\n\nКомментарий ИИ:\n{evaluation_text}")
         session[user_id]["step"] += 1
         await ask_next(update, context)
+    elif evaluation_simple == "partial":
+        await update.message.reply_text(f"🟡 Почти правильно.\n\nКомментарий ИИ:\n{evaluation_text}")
     else:
         await update.message.reply_text(f"❌ Не совсем.\n\nКомментарий ИИ:\n{evaluation_text}")
 
 # === /stop — показать статистику ===
 async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    score = session.get(user_id, {}).get("score", {"correct":0,"incorrect":0})
+    session[user_id]["training_active"] = False  # Флаг окончания тренировки
+
+    score = session.get(user_id, {}).get("score", {"correct":0,"partial":0,"incorrect":0})
     msg = (f"📊 Статистика:\n"
            f"✅ Верных: {score.get('correct', 0)}\n"
+           f"🟡 Частично верных: {score.get('partial', 0)}\n"
            f"❌ Неверных: {score.get('incorrect', 0)}")
     await update.message.reply_text(msg)
 
