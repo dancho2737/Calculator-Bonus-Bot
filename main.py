@@ -258,10 +258,14 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("Нет правильного ответа для показа.")
         return
 
-    if text.lower() == "/skip":
-        session[user_id]["step"] += 1
-        await ask_next(update, context)
+    text = update.message.text.strip()
+    user_id = update.effective_user.id
+
+    if text.lower().startswith("/skip"):
+       session[user_id]["step"] += 1
+            await ask_next(update, context)
         return
+
 
     if text.lower() == "/error":
         # Добавляем последний ответ в ошибки
