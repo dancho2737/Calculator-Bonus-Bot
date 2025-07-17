@@ -3,6 +3,7 @@ import sqlite3
 import json
 import os
 import random
+import glob
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
@@ -19,7 +20,6 @@ API_KEY = os.environ["OPENAI_KEY"]
 openai.api_key = API_KEY
 
 DB_FILE = "data.db"
-SCENARIO_FILE = "scenarios.json"
 RULES_FOLDER = "rules"
 BOT_PASSWORD = "starzbot"
 ADMIN_PASSWORD = "starz123321"
@@ -39,24 +39,6 @@ logger = logging.getLogger(__name__)
 
 # === SESSION ===
 session = {}
-
-# === Глобальная переменная для правил ===
-rules_data = {}
-
-# === Загрузка правил из папки rules/ ===
-def load_rules():
-    rules = {}
-    if not os.path.exists(RULES_FOLDER):
-        logger.warning(f"Папка с правилами '{RULES_FOLDER}' не найдена!")
-        return rules
-    for filename in os.listdir(RULES_FOLDER):
-        if filename.endswith(".txt"):
-            path = os.path.join(RULES_FOLDER, filename)
-            with open(path, encoding="utf-8") as f:
-                key = os.path.splitext(filename)[0].lower()
-                rules[key] = f.read()
-    logger.info(f"Загружено правил из {len(rules)} файлов.")
-    return rules
 
 # === DATABASE INIT ===
 def init_db():
@@ -107,25 +89,30 @@ def init_db():
     conn.commit()
     conn.close()
 
-# === Загрузка сценариев ===
+# === Загрузка сценариев из папки rules ===
 def load_scenarios():
-    with open(SCENARIO_FILE, encoding='utf-8') as f:
-        data = json.load(f)
-    random.shuffle(data)
-    return data
+    scenarios = []
+    files = glob.glob(os.path.join(RULES_FOLDER, "*.txt"))
+    for file in files:
+        try:
+            with open(file, encoding='utf-8') as f:
+                data = json.load(f)
+                if isinstance(data, list):
+                    scenarios.extend(data)
+                else:
+                    logger.warning(f"Формат данных в {file} не является списком")
+        except Exception as e:
+            logger.error(f"Ошибка загрузки файла {file}: {e}")
+    random.shuffle(scenarios)
+    return scenarios
 
 # === Оценка ответов ИИ ===
-async def evaluate_answer(entry, user_answer, rules_data):
+async def evaluate_answer(entry, user_answer):
     question = entry["question"]
     expected_answer = entry["expected_answer"]
 
-    combined_rules = "\n\n".join(rules_data.values())
-
-    prompt = TRAINING_PROMPT.format(
-        question=question,
-        expected_answer=expected_answer
-    )
-    prompt += f"\n\nПравила сайта:\n{combined_rules}\n\nОтвет оператора:\n{user_answer}"
+    prompt = TRAINING_PROMPT.format(question=question, expected_answer=expected_answer)
+    prompt += f"\n\nОтвет оператора:\n{user_answer}"
 
     try:
         response = await openai.ChatCompletion.acreate(
@@ -260,7 +247,7 @@ async def ask_next(update: Update, context: ContextTypes.DEFAULT_TYPE):
     session[user_id]["current"] = current
     await update.message.reply_text(f"Вопрос: {current['question']}")
 
-# === Обработка ответа пользователя ===
+# === Обработка ответа пользователя и команд во время тренировки ===
 async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     text = update.message.text.strip()
@@ -299,7 +286,7 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     entry = session[user_id]["current"]
 
-    evaluation_text = await evaluate_answer(entry, text, rules_data)
+    evaluation_text = await evaluate_answer(entry, text)
 
     evaluation_simple = "incorrect"
     lower_eval = evaluation_text.lower()
@@ -322,7 +309,6 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.commit()
     conn.close()
 
-    session[user_id]["score"].setdefault(evaluation_simple, 0)
     session[user_id]["score"][evaluation_simple] += 1
 
     if evaluation_simple == "correct":
@@ -330,7 +316,7 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
         session[user_id]["step"] += 1
         await ask_next(update, context)
     else:
-        await update.message.reply_text(f"❌ Не совсем.\n\nКомментарий ИИ:\n{evaluation_text}")
+        await update.message.reply_text(f"❌ Неверно.\n\nКомментарий ИИ:\n{evaluation_text}")
 
 # === /stop — показать статистику ===
 async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -442,7 +428,6 @@ async def done_mistake(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.close()
     await update.message.reply_text(f"Ошибка с ID {mistake_id} помечена как решённая.")
 
-# === /help ===
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = (
         "/auth - авторизация (ввод пароля и вход/регистрация)\n"
@@ -452,20 +437,14 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/error - отправить жалобу на последний ответ\n"
         "/admin - вход в админ-панель (требуется пароль)\n"
         "/exit - выйти из админ-режима\n"
-        # Команды /mistake и /done доступны только админам
     )
     await update.message.reply_text(msg)
 
-# === Обработка неизвестных команд и сообщений ===
 async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Неизвестная команда. Напишите /help для списка команд.")
 
-# === Главное меню обработчиков ===
 def main():
-    global rules_data
     init_db()
-    rules_data = load_rules()
-
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     auth_conv = ConversationHandler(
