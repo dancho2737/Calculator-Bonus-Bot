@@ -3,7 +3,6 @@ import sqlite3
 import json
 import os
 import random
-import glob
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
@@ -20,6 +19,7 @@ API_KEY = os.environ["OPENAI_KEY"]
 openai.api_key = API_KEY
 
 DB_FILE = "data.db"
+SCENARIO_FILE = "scenarios.json"
 RULES_FOLDER = "rules"
 BOT_PASSWORD = "starzbot"
 ADMIN_PASSWORD = "starz123321"
@@ -39,6 +39,24 @@ logger = logging.getLogger(__name__)
 
 # === SESSION ===
 session = {}
+
+# === === МОИ ИЗМЕНЕНИЯ === ===
+# Загрузка правил из папки rules
+def load_rules():
+    rules_data = {}
+    if not os.path.exists(RULES_FOLDER):
+        logger.warning(f"Папка с правилами {RULES_FOLDER} не найдена")
+        return rules_data
+    for filename in os.listdir(RULES_FOLDER):
+        if filename.endswith(".txt"):
+            path = os.path.join(RULES_FOLDER, filename)
+            with open(path, encoding="utf-8") as f:
+                content = f.read()
+                key = os.path.splitext(filename)[0].lower()
+                rules_data[key] = content
+    logger.info(f"Загружено правил из {len(rules_data)} файлов из {RULES_FOLDER}")
+    return rules_data
+# === ===
 
 # === DATABASE INIT ===
 def init_db():
@@ -89,22 +107,12 @@ def init_db():
     conn.commit()
     conn.close()
 
-# === Загрузка сценариев из папки rules ===
+# === Загрузка сценариев ===
 def load_scenarios():
-    scenarios = []
-    files = glob.glob(os.path.join(RULES_FOLDER, "*.txt"))
-    for file in files:
-        try:
-            with open(file, encoding='utf-8') as f:
-                data = json.load(f)
-                if isinstance(data, list):
-                    scenarios.extend(data)
-                else:
-                    logger.warning(f"Формат данных в {file} не является списком")
-        except Exception as e:
-            logger.error(f"Ошибка загрузки файла {file}: {e}")
-    random.shuffle(scenarios)
-    return scenarios
+    with open(SCENARIO_FILE, encoding='utf-8') as f:
+        data = json.load(f)
+    random.shuffle(data)
+    return data
 
 # === Оценка ответов ИИ ===
 async def evaluate_answer(entry, user_answer):
@@ -149,6 +157,7 @@ async def password_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Неверный пароль. Попробуйте снова через /auth.")
         return ConversationHandler.END
 
+# Обработка кнопок регистрации/входа
 async def auth_choice_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -161,12 +170,14 @@ async def auth_choice_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
         await query.edit_message_text("Введите логин для входа:")
         return LOGIN_LOGIN
 
+# Регистрация — ввод логина
 async def register_login(update: Update, context: ContextTypes.DEFAULT_TYPE):
     login = update.message.text.strip()
     context.user_data['register_login'] = login
     await update.message.reply_text("Введите пароль для регистрации:")
     return REGISTER_PASS
 
+# Регистрация — ввод пароля
 async def register_pass(update: Update, context: ContextTypes.DEFAULT_TYPE):
     password = update.message.text.strip()
     login = context.user_data.get('register_login')
@@ -191,12 +202,14 @@ async def register_pass(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("✅ Регистрация успешна! Напишите /start для начала тренировки.")
     return ConversationHandler.END
 
+# Вход — ввод логина
 async def login_login(update: Update, context: ContextTypes.DEFAULT_TYPE):
     login = update.message.text.strip()
     context.user_data['login_login'] = login
     await update.message.reply_text("Введите пароль для входа:")
     return LOGIN_PASS
 
+# Вход — ввод пароля
 async def login_pass(update: Update, context: ContextTypes.DEFAULT_TYPE):
     password = update.message.text.strip()
     login = context.user_data.get('login_login')
@@ -223,13 +236,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Сначала авторизуйтесь через /auth.")
         return ConversationHandler.END
 
+    # Если пользователь в админ режиме, убираем этот флаг для продолжения тренировки
     if session[user_id].get("is_admin_conversation"):
         session[user_id]["is_admin_conversation"] = False
 
     scenario = load_scenarios()
     session[user_id]["scenario"] = scenario
     session[user_id]["step"] = 0
-    session[user_id]["score"] = {"correct": 0, "incorrect": 0}
+    session[user_id]["score"] = {"correct": 0, "incorrect": 0}  # Убрали partial
 
     await ask_next(update, context)
     return AWAITING_ANSWER
@@ -256,10 +270,12 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Сначала напишите /start.")
         return
 
+    # Если пользователь в админ режиме — не обрабатываем ответы
     if session.get(user_id, {}).get("is_admin_conversation", False):
         await update.message.reply_text("Тренировка неактивна. Напишите /start для начала.")
         return
 
+    # Обработка команд
     if text.lower() == "/answer":
         last = session.get(user_id, {}).get("last")
         if last:
@@ -288,10 +304,12 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     evaluation_text = await evaluate_answer(entry, text)
 
+    # Убираем partial, оставляем только correct и incorrect
     evaluation_simple = "incorrect"
     lower_eval = evaluation_text.lower()
-    if "полностью верно" in lower_eval or "✅" in evaluation_text:
+    if "полностью верно" in lower_eval or "✅" in evaluation_text or "верно" in lower_eval:
         evaluation_simple = "correct"
+    # partial убираем, считаем все остальное incorrect
 
     session[user_id]["last"] = {
         "question": entry["question"],
@@ -309,6 +327,8 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.commit()
     conn.close()
 
+    session[user_id]["score"].setdefault("correct", 0)
+    session[user_id]["score"].setdefault("incorrect", 0)
     session[user_id]["score"][evaluation_simple] += 1
 
     if evaluation_simple == "correct":
@@ -316,7 +336,7 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
         session[user_id]["step"] += 1
         await ask_next(update, context)
     else:
-        await update.message.reply_text(f"❌ Неверно.\n\nКомментарий ИИ:\n{evaluation_text}")
+        await update.message.reply_text(f"❌ Не совсем.\n\nКомментарий ИИ:\n{evaluation_text}")
 
 # === /stop — показать статистику ===
 async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -380,6 +400,7 @@ async def admin_pass_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Неверный пароль администратора.")
         return ConversationHandler.END
 
+# Команда выхода из админ-режима
 async def admin_exit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_id in session:
@@ -388,6 +409,7 @@ async def admin_exit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Выход из режима администратора. Напишите /start для начала тренировки.")
     return ConversationHandler.END
 
+# Показать ошибки /mistake
 async def show_mistakes(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if not session.get(user_id, {}).get("is_admin"):
@@ -409,6 +431,7 @@ async def show_mistakes(update: Update, context: ContextTypes.DEFAULT_TYPE):
         msg += f"ID: {row[0]}\nВопрос: {row[1]}\nОтвет: {row[2]}\nОценка: {row[3]}\n\n"
     await update.message.reply_text(msg)
 
+# Пометить ошибку решённой /done ID
 async def done_mistake(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if not session.get(user_id, {}).get("is_admin"):
@@ -428,6 +451,7 @@ async def done_mistake(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.close()
     await update.message.reply_text(f"Ошибка с ID {mistake_id} помечена как решённая.")
 
+# === /help ===
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = (
         "/auth - авторизация (ввод пароля и вход/регистрация)\n"
@@ -437,16 +461,43 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/error - отправить жалобу на последний ответ\n"
         "/admin - вход в админ-панель (требуется пароль)\n"
         "/exit - выйти из админ-режима\n"
+        # Команды /mistake и /done доступны только админам
     )
     await update.message.reply_text(msg)
 
+# === Обработка неизвестных команд и сообщений ===
 async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Неизвестная команда. Напишите /help для списка команд.")
 
+# === === МОИ ИЗМЕНЕНИЯ === ===
+# Новый обработчик, который позволяет в любой момент ввести пароль админа и войти
+async def handle_admin_password_anytime(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    text = update.message.text.strip()
+    if text == ADMIN_PASSWORD:
+        session.setdefault(user_id, {})
+        session[user_id]["is_admin_conversation"] = True
+        session[user_id]["is_admin"] = True
+        await update.message.reply_text(
+            "Доступ к административным командам предоставлен.\n"
+            "Доступны команды:\n"
+            "/mistake - показать ошибки\n"
+            "/done <ID> - пометить ошибку решённой\n"
+            "/exit - выйти из режима администратора"
+        )
+        return ADMIN_CMD
+    # если не пароль - игнорируем
+    return
+# === ===
+
+# === Главное меню обработчиков ===
 def main():
     init_db()
+    rules = load_rules()  # загружаем правила при старте, можно сохранить в глобальный session/global если надо
+
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
+    # Конверсация авторизации
     auth_conv = ConversationHandler(
         entry_points=[CommandHandler("auth", auth)],
         states={
@@ -462,12 +513,19 @@ def main():
     )
     app.add_handler(auth_conv)
 
+    # Тренировка
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("stop", stop))
     app.add_handler(CommandHandler("answer", show_correct))
     app.add_handler(CommandHandler("error", report_error))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, process))
 
+    # Добавляем отдельный хендлер на любой текст для проверки входа в админ режим (пароль админа)
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_admin_password_anytime), group=1)
+
+    # Основной обработчик ответов тренировки (низкий приоритет)
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, process), group=2)
+
+    # Админ панель
     admin_conv = ConversationHandler(
         entry_points=[CommandHandler("admin", admin_start)],
         states={
@@ -484,6 +542,7 @@ def main():
     )
     app.add_handler(admin_conv)
 
+    # Помощь и неизвестные
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(MessageHandler(filters.COMMAND, unknown))
 
