@@ -40,8 +40,7 @@ logger = logging.getLogger(__name__)
 # === SESSION ===
 session = {}
 
-# === === МОИ ИЗМЕНЕНИЯ === ===
-# Загрузка правил из папки rules
+# === Загрузка правил из папки rules ===
 def load_rules():
     rules_data = {}
     if not os.path.exists(RULES_FOLDER):
@@ -56,56 +55,50 @@ def load_rules():
                 rules_data[key] = content
     logger.info(f"Загружено правил из {len(rules_data)} файлов из {RULES_FOLDER}")
     return rules_data
-# === ===
 
 # === DATABASE INIT ===
 def init_db():
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    # Пользователи
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            user_id INTEGER PRIMARY KEY,
-            username TEXT,
-            login TEXT UNIQUE,
-            password TEXT
-        )
-    ''')
-    # Логи тренировок
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS logs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            question TEXT,
-            answer TEXT,
-            evaluation TEXT,
-            grammar_issues TEXT,
-            correct_answer TEXT
-        )
-    ''')
-    # Жалобы (ошибки)
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS error_reports (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            question TEXT,
-            answer TEXT,
-            evaluation TEXT
-        )
-    ''')
-    # Ошибки с ID для /mistake и /done
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS mistakes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            question TEXT,
-            answer TEXT,
-            evaluation TEXT,
-            resolved INTEGER DEFAULT 0
-        )
-    ''')
-    conn.commit()
-    conn.close()
+    with sqlite3.connect(DB_FILE) as conn:
+        c = conn.cursor()
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                user_id INTEGER PRIMARY KEY,
+                username TEXT,
+                login TEXT UNIQUE,
+                password TEXT
+            )
+        ''')
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                question TEXT,
+                answer TEXT,
+                evaluation TEXT,
+                grammar_issues TEXT,
+                correct_answer TEXT
+            )
+        ''')
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS error_reports (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                question TEXT,
+                answer TEXT,
+                evaluation TEXT
+            )
+        ''')
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS mistakes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                question TEXT,
+                answer TEXT,
+                evaluation TEXT,
+                resolved INTEGER DEFAULT 0
+            )
+        ''')
+        conn.commit()
 
 # === Загрузка сценариев ===
 def load_scenarios():
@@ -169,10 +162,17 @@ async def auth_choice_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     elif choice == "login":
         await query.edit_message_text("Введите логин для входа:")
         return LOGIN_LOGIN
+    else:
+        await query.edit_message_text("Неизвестный выбор. Начните заново с /auth.")
+        return ConversationHandler.END
 
 # Регистрация — ввод логина
 async def register_login(update: Update, context: ContextTypes.DEFAULT_TYPE):
     login = update.message.text.strip()
+    if not login:
+        await update.message.reply_text("Логин не может быть пустым. Введите логин:")
+        return REGISTER_LOGIN
+
     context.user_data['register_login'] = login
     await update.message.reply_text("Введите пароль для регистрации:")
     return REGISTER_PASS
@@ -182,21 +182,27 @@ async def register_pass(update: Update, context: ContextTypes.DEFAULT_TYPE):
     password = update.message.text.strip()
     login = context.user_data.get('register_login')
     user_id = update.effective_user.id
-    username = update.effective_user.username
+    username = update.effective_user.username or ""
 
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
+    if not password:
+        await update.message.reply_text("Пароль не может быть пустым. Введите пароль:")
+        return REGISTER_PASS
 
-    c.execute("SELECT * FROM users WHERE login=?", (login,))
-    if c.fetchone():
-        await update.message.reply_text("❌ Такой логин уже существует. Введите другой логин или начните заново через /auth.")
-        conn.close()
+    try:
+        with sqlite3.connect(DB_FILE) as conn:
+            c = conn.cursor()
+            c.execute("SELECT * FROM users WHERE login=?", (login,))
+            if c.fetchone():
+                await update.message.reply_text("❌ Такой логин уже существует. Введите другой логин или начните заново через /auth.")
+                return ConversationHandler.END
+
+            c.execute("INSERT INTO users (user_id, username, login, password) VALUES (?, ?, ?, ?)",
+                      (user_id, username, login, password))
+            conn.commit()
+    except Exception as e:
+        logger.error(f"Ошибка регистрации: {e}")
+        await update.message.reply_text("Ошибка при регистрации. Попробуйте позже.")
         return ConversationHandler.END
-
-    c.execute("INSERT INTO users (user_id, username, login, password) VALUES (?, ?, ?, ?)",
-              (user_id, username, login, password))
-    conn.commit()
-    conn.close()
 
     session[user_id] = {"authenticated": True, "login": login}
     await update.message.reply_text("✅ Регистрация успешна! Напишите /start для начала тренировки.")
@@ -205,6 +211,10 @@ async def register_pass(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Вход — ввод логина
 async def login_login(update: Update, context: ContextTypes.DEFAULT_TYPE):
     login = update.message.text.strip()
+    if not login:
+        await update.message.reply_text("Логин не может быть пустым. Введите логин:")
+        return LOGIN_LOGIN
+
     context.user_data['login_login'] = login
     await update.message.reply_text("Введите пароль для входа:")
     return LOGIN_PASS
@@ -215,11 +225,19 @@ async def login_pass(update: Update, context: ContextTypes.DEFAULT_TYPE):
     login = context.user_data.get('login_login')
     user_id = update.effective_user.id
 
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute("SELECT * FROM users WHERE login=? AND password=?", (login, password))
-    user = c.fetchone()
-    conn.close()
+    if not password:
+        await update.message.reply_text("Пароль не может быть пустым. Введите пароль:")
+        return LOGIN_PASS
+
+    try:
+        with sqlite3.connect(DB_FILE) as conn:
+            c = conn.cursor()
+            c.execute("SELECT * FROM users WHERE login=? AND password=?", (login, password))
+            user = c.fetchone()
+    except Exception as e:
+        logger.error(f"Ошибка при входе: {e}")
+        await update.message.reply_text("Ошибка при входе. Попробуйте позже.")
+        return ConversationHandler.END
 
     if user:
         session[user_id] = {"authenticated": True, "login": login}
@@ -236,22 +254,20 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Сначала авторизуйтесь через /auth.")
         return ConversationHandler.END
 
-    # Если пользователь в админ режиме, убираем этот флаг для продолжения тренировки
     if session[user_id].get("is_admin_conversation"):
         session[user_id]["is_admin_conversation"] = False
 
     scenario = load_scenarios()
     session[user_id]["scenario"] = scenario
     session[user_id]["step"] = 0
-    session[user_id]["score"] = {"correct": 0, "incorrect": 0}  # Убрали partial
+    session[user_id]["score"] = {"correct": 0, "incorrect": 0}
 
-    await ask_next(update, context)
-    return AWAITING_ANSWER
+    return await ask_next(update, context)
 
 async def ask_next(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    step = session[user_id]["step"]
-    scenario = session[user_id]["scenario"]
+    step = session[user_id].get("step", 0)
+    scenario = session[user_id].get("scenario", [])
 
     if step >= len(scenario):
         await update.message.reply_text("✅ Тренировка завершена. Введите /stop для просмотра статистики.")
@@ -260,6 +276,7 @@ async def ask_next(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current = scenario[step]
     session[user_id]["current"] = current
     await update.message.reply_text(f"Вопрос: {current['question']}")
+    return AWAITING_ANSWER
 
 # === Обработка ответа пользователя и команд во время тренировки ===
 async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -270,7 +287,6 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Сначала напишите /start.")
         return
 
-    # Если пользователь в админ режиме — не обрабатываем ответы
     if session.get(user_id, {}).get("is_admin_conversation", False):
         await update.message.reply_text("Тренировка неактивна. Напишите /start для начала.")
         return
@@ -289,27 +305,27 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not last:
             await update.message.reply_text("Нет ответа для отправки жалобы.")
             return
-        conn = sqlite3.connect(DB_FILE)
-        c = conn.cursor()
-        c.execute(
-            "INSERT INTO error_reports (user_id, question, answer, evaluation) VALUES (?, ?, ?, ?)",
-            (user_id, last["question"], last["answer"], last["evaluation"])
-        )
-        conn.commit()
-        conn.close()
-        await update.message.reply_text("Жалоба отправлена.")
+        try:
+            with sqlite3.connect(DB_FILE) as conn:
+                c = conn.cursor()
+                c.execute(
+                    "INSERT INTO error_reports (user_id, question, answer, evaluation) VALUES (?, ?, ?, ?)",
+                    (user_id, last["question"], last["answer"], last["evaluation"])
+                )
+                conn.commit()
+            await update.message.reply_text("Жалоба отправлена.")
+        except Exception as e:
+            logger.error(f"Ошибка при отправке жалобы: {e}")
+            await update.message.reply_text("Ошибка при отправке жалобы. Попробуйте позже.")
         return
 
     entry = session[user_id]["current"]
-
     evaluation_text = await evaluate_answer(entry, text)
 
-    # Убираем partial, оставляем только correct и incorrect
     evaluation_simple = "incorrect"
     lower_eval = evaluation_text.lower()
     if "полностью верно" in lower_eval or "✅" in evaluation_text or "верно" in lower_eval:
         evaluation_simple = "correct"
-    # partial убираем, считаем все остальное incorrect
 
     session[user_id]["last"] = {
         "question": entry["question"],
@@ -318,15 +334,20 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "correct_answer": entry["expected_answer"]
     }
 
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute("""
-        INSERT INTO logs (user_id, question, answer, evaluation, grammar_issues, correct_answer)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (user_id, entry["question"], text, evaluation_simple, "", entry["expected_answer"]))
-    conn.commit()
-    conn.close()
+    try:
+        with sqlite3.connect(DB_FILE) as conn:
+            c = conn.cursor()
+            c.execute("""
+                INSERT INTO logs (user_id, question, answer, evaluation, grammar_issues, correct_answer)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (user_id, entry["question"], text, evaluation_simple, "", entry["expected_answer"]))
+            conn.commit()
+    except Exception as e:
+        logger.error(f"Ошибка при записи лога: {e}")
 
+    # Обновление счёта
+    if "score" not in session[user_id]:
+        session[user_id]["score"] = {"correct": 0, "incorrect": 0}
     session[user_id]["score"].setdefault("correct", 0)
     session[user_id]["score"].setdefault("incorrect", 0)
     session[user_id]["score"][evaluation_simple] += 1
@@ -334,7 +355,7 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if evaluation_simple == "correct":
         await update.message.reply_text(f"✅ Верно!\n\nКомментарий ИИ:\n{evaluation_text}")
         session[user_id]["step"] += 1
-        await ask_next(update, context)
+        return await ask_next(update, context)
     else:
         await update.message.reply_text(f"❌ Не совсем.\n\nКомментарий ИИ:\n{evaluation_text}")
 
@@ -364,13 +385,16 @@ async def report_error(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Нет жалобы для отправки.")
         return
 
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute("INSERT INTO error_reports (user_id, question, answer, evaluation) VALUES (?, ?, ?, ?)",
-              (user_id, last["question"], last["answer"], last["evaluation"]))
-    conn.commit()
-    conn.close()
-    await update.message.reply_text("Жалоба отправлена.")
+    try:
+        with sqlite3.connect(DB_FILE) as conn:
+            c = conn.cursor()
+            c.execute("INSERT INTO error_reports (user_id, question, answer, evaluation) VALUES (?, ?, ?, ?)",
+                      (user_id, last["question"], last["answer"], last["evaluation"]))
+            conn.commit()
+        await update.message.reply_text("Жалоба отправлена.")
+    except Exception as e:
+        logger.error(f"Ошибка при отправке жалобы: {e}")
+        await update.message.reply_text("Ошибка при отправке жалобы. Попробуйте позже.")
 
 # === /admin — админ команда с паролем ===
 async def admin_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -416,11 +440,15 @@ async def show_mistakes(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Доступ запрещён.")
         return
 
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute("SELECT id, question, answer, evaluation, resolved FROM mistakes WHERE resolved=0")
-    rows = c.fetchall()
-    conn.close()
+    try:
+        with sqlite3.connect(DB_FILE) as conn:
+            c = conn.cursor()
+            c.execute("SELECT id, question, answer, evaluation, resolved FROM mistakes WHERE resolved=0")
+            rows = c.fetchall()
+    except Exception as e:
+        logger.error(f"Ошибка при получении ошибок: {e}")
+        await update.message.reply_text("Ошибка при получении данных.")
+        return
 
     if not rows:
         await update.message.reply_text("Нет нерешённых ошибок.")
@@ -444,12 +472,15 @@ async def done_mistake(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     mistake_id = int(args[0])
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute("UPDATE mistakes SET resolved=1 WHERE id=?", (mistake_id,))
-    conn.commit()
-    conn.close()
-    await update.message.reply_text(f"Ошибка с ID {mistake_id} помечена как решённая.")
+    try:
+        with sqlite3.connect(DB_FILE) as conn:
+            c = conn.cursor()
+            c.execute("UPDATE mistakes SET resolved=1 WHERE id=?", (mistake_id,))
+            conn.commit()
+        await update.message.reply_text(f"Ошибка с ID {mistake_id} помечена как решённая.")
+    except Exception as e:
+        logger.error(f"Ошибка при обновлении ошибки: {e}")
+        await update.message.reply_text("Ошибка при обновлении записи. Попробуйте позже.")
 
 # === /help ===
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -469,8 +500,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Неизвестная команда. Напишите /help для списка команд.")
 
-# === === МОИ ИЗМЕНЕНИЯ === ===
-# Новый обработчик, который позволяет в любой момент ввести пароль админа и войти
+# === Обработчик для входа в админ режим в любой момент ===
 async def handle_admin_password_anytime(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     text = update.message.text.strip()
@@ -486,14 +516,12 @@ async def handle_admin_password_anytime(update: Update, context: ContextTypes.DE
             "/exit - выйти из режима администратора"
         )
         return ADMIN_CMD
-    # если не пароль - игнорируем
-    return
-# === ===
+    return  # Иначе игнорируем
 
 # === Главное меню обработчиков ===
 def main():
     init_db()
-    rules = load_rules()  # загружаем правила при старте, можно сохранить в глобальный session/global если надо
+    rules = load_rules()  # можно сохранить, если будешь использовать в обработчиках
 
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
@@ -519,10 +547,10 @@ def main():
     app.add_handler(CommandHandler("answer", show_correct))
     app.add_handler(CommandHandler("error", report_error))
 
-    # Добавляем отдельный хендлер на любой текст для проверки входа в админ режим (пароль админа)
+    # Вход в админ режим в любой момент (текст)
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_admin_password_anytime), group=1)
 
-    # Основной обработчик ответов тренировки (низкий приоритет)
+    # Обработка тренировочных ответов
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, process), group=2)
 
     # Админ панель
@@ -542,7 +570,7 @@ def main():
     )
     app.add_handler(admin_conv)
 
-    # Помощь и неизвестные
+    # Помощь и неизвестные команды
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(MessageHandler(filters.COMMAND, unknown))
 
