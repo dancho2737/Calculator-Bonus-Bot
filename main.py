@@ -56,6 +56,9 @@ def load_rules():
     logger.info(f"Загружено правил из {len(rules_data)} файлов из {RULES_FOLDER}")
     return rules_data
 
+# Загрузка правил единожды при старте
+RULES = load_rules()
+
 # === DATABASE INIT ===
 def init_db():
     conn = sqlite3.connect(DB_FILE)
@@ -112,12 +115,13 @@ def load_scenarios():
     random.shuffle(data)
     return data
 
-# === Оценка ответов ИИ ===
-async def evaluate_answer(entry, user_answer):
+# === Оценка ответов ИИ с учётом правил ===
+async def evaluate_answer(entry, user_answer, rules_text=""):
     question = entry["question"]
     expected_answer = entry["expected_answer"]
 
     prompt = TRAINING_PROMPT.format(question=question, expected_answer=expected_answer)
+    prompt += f"\n\nПравила для оценки:\n{rules_text}"
     prompt += f"\n\nОтвет оператора:\n{user_answer}"
 
     try:
@@ -157,7 +161,6 @@ async def password_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
 
     if password == BOT_PASSWORD:
-        # Пока пользователь не авторизован полностью, просто пароль принят
         session[user_id] = {"authenticated": False}
 
         keyboard = [
@@ -312,8 +315,10 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     entry = session[user_id]["current"]
+    category = entry.get("category", "").lower()
+    rules_text = RULES.get(category, "")
 
-    evaluation_simple, evaluation_text = await evaluate_answer(entry, text)
+    evaluation_simple, evaluation_text = await evaluate_answer(entry, text, rules_text)
 
     if evaluation_simple == "error":
         await update.message.reply_text(evaluation_text)
@@ -333,6 +338,15 @@ async def process(update: Update, context: ContextTypes.DEFAULT_TYPE):
         VALUES (?, ?, ?, ?, ?, ?)
     """, (user_id, entry["question"], text, evaluation_simple, "", entry["expected_answer"]))
     conn.commit()
+
+    # Записываем ошибки в таблицу mistakes
+    if evaluation_simple == "incorrect":
+        c.execute(
+            "INSERT INTO mistakes (user_id, question, answer, evaluation) VALUES (?, ?, ?, ?)",
+            (user_id, entry["question"], text, evaluation_simple)
+        )
+        conn.commit()
+
     conn.close()
 
     session[user_id]["score"].setdefault("correct", 0)
@@ -426,7 +440,7 @@ async def show_mistakes(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute("SELECT id, question, answer, evaluation, resolved FROM mistakes WHERE resolved=0")
+    c.execute("SELECT id, question, answer, evaluation FROM mistakes WHERE resolved=0 ORDER BY id DESC LIMIT 10")
     rows = c.fetchall()
     conn.close()
 
@@ -434,7 +448,7 @@ async def show_mistakes(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Нет нерешённых ошибок.")
         return
 
-    msg = "Нерешённые ошибки:\n"
+    msg = "Нерешённые ошибки (последние 10):\n"
     for row in rows:
         msg += f"ID: {row[0]}\nВопрос: {row[1]}\nОтвет: {row[2]}\nОценка: {row[3]}\n\n"
     await update.message.reply_text(msg)
@@ -468,50 +482,32 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/answer - показать правильный ответ на последний вопрос\n"
         "/error - отправить жалобу на последний ответ\n"
         "/admin - вход в админ-панель (требуется пароль)\n"
-        "/exit - выйти из админ-режима\n"
-        # Команды /mistake и /done доступны только админам
+        "/help - показать это сообщение"
     )
     await update.message.reply_text(msg)
 
-# === Обработка неизвестных команд и сообщений ===
-async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Неизвестная команда. Напишите /help для списка команд.")
-
-# === Обработчик, позволяющий ввести пароль админа в любой момент ===
-async def handle_admin_password_anytime(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    text = update.message.text.strip()
-    if text == ADMIN_PASSWORD:
-        session.setdefault(user_id, {})
-        session[user_id]["is_admin_conversation"] = True
-        session[user_id]["is_admin"] = True
-        await update.message.reply_text("Админ-доступ предоставлен.")
-    else:
-        await update.message.reply_text("Неверный админ-пароль.")
-
-# === MAIN ===
+# === Главная точка запуска ===
 def main():
     init_db()
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    application = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    # Conversation handler для авторизации
+    # Обработчики авторизации
     auth_conv = ConversationHandler(
-        entry_points=[CommandHandler("auth", auth)],
+        entry_points=[CommandHandler('auth', auth)],
         states={
             PASSWORD_STATE: [MessageHandler(filters.TEXT & ~filters.COMMAND, password_input)],
             AUTH_CHOICE: [CallbackQueryHandler(auth_choice_handler)],
             REGISTER_LOGIN: [MessageHandler(filters.TEXT & ~filters.COMMAND, register_login)],
             REGISTER_PASS: [MessageHandler(filters.TEXT & ~filters.COMMAND, register_pass)],
             LOGIN_LOGIN: [MessageHandler(filters.TEXT & ~filters.COMMAND, login_login)],
-            LOGIN_PASS: [MessageHandler(filters.TEXT & ~filters.COMMAND, login_pass)],
+            LOGIN_PASS: [MessageHandler(filters.TEXT & ~filters.COMMAND, login_pass)]
         },
-        fallbacks=[CommandHandler("cancel", lambda u,c: ConversationHandler.END)],
-        allow_reentry=True,
+        fallbacks=[]
     )
 
-    # Conversation handler для админа
+    # Админ-конверсация
     admin_conv = ConversationHandler(
-        entry_points=[CommandHandler("admin", admin_start)],
+        entry_points=[CommandHandler('admin', admin_start)],
         states={
             ADMIN_PASS: [MessageHandler(filters.TEXT & ~filters.COMMAND, admin_pass_input)],
             ADMIN_CMD: [
@@ -520,21 +516,20 @@ def main():
                 CommandHandler("exit", admin_exit),
             ]
         },
-        fallbacks=[CommandHandler("exit", admin_exit)],
+        fallbacks=[CommandHandler("exit", admin_exit)]
     )
 
-    app.add_handler(auth_conv)
-    app.add_handler(admin_conv)
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("stop", stop))
-    app.add_handler(CommandHandler("answer", show_correct))
-    app.add_handler(CommandHandler("error", report_error))
-    app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, process))
-    app.add_handler(MessageHandler(filters.COMMAND, unknown))
+    application.add_handler(auth_conv)
+    application.add_handler(admin_conv)
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("stop", stop))
+    application.add_handler(CommandHandler("answer", show_correct))
+    application.add_handler(CommandHandler("error", report_error))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, process))
+    application.add_handler(CommandHandler("help", help_command))
 
-    logger.info("Бот запущен")
-    app.run_polling()
+    logger.info("Бот запущен...")
+    application.run_polling()
 
 if __name__ == "__main__":
     main()
